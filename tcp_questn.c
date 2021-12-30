@@ -127,6 +127,7 @@ static void session_check_lf(struct session *sess)
     line = malloc(pos+1);
     memcpy(line, sess->buf, pos);
     line[pos] = 0;
+	//printf("%s\n", line);
     sess->buf_used -= (pos+1);
     memmove(sess->buf, sess->buf+pos+1, sess->buf_used);
     if(line[pos-1] == '\r')
@@ -140,8 +141,11 @@ static int session_do_read(struct session *sess)
     rc = read(sess->fd, sess->buf + bufp, INBUFSIZE - bufp);
     if(rc <= 0) {
         sess->state = fsm_error;
+		char * m = "end of request!";
+		write(1, m, strlen(m));
         return 0;   /* this means "don't continue" for the caller */
     }
+	write(1, sess->buf + bufp, INBUFSIZE - bufp);
     sess->buf_used += rc;
     session_check_lf(sess);
     if(sess->buf_used >= INBUFSIZE) {
@@ -213,7 +217,6 @@ static int server_init(struct server_str *serv, int port, const char *fname)
     serv->sess_array_size = INIT_SESS_ARR_SIZE;
     for(i = 0; i < INIT_SESS_ARR_SIZE; i++)
         serv->sess_array[i] = NULL;
-
     return 1;
 }
 
@@ -311,5 +314,3 @@ int main(int argc, const char * const *argv)
     if(!server_init(&server, port, argv[2]))
         return 3;
 
-    return server_go(&server);
-}

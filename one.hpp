@@ -1,20 +1,20 @@
 #include <iostream>
 #pragma_once
 
-class Session {
+class One {
 	private:
 		int	 fd;
 		std::string buffIn;
 		std::string buffOut;
 	public:
-		Session( int fd );
-		Session( const Session & copy );
-		~Session( void );
-		Session & operator=( const Session & other );
+		One( int fd );
+		One( const One & copy );
+		~One( void );
+		One & operator=( const One & other );
 
 		int 		  getFd( void )   const { return fd; }
 		std::string getBuff( void )   const { return buffIn; }
 		bool 		toBeWrite( void ) const { return !buffOut.empty(); }
 };
 
-std::ostream & operator<<( std::ostream & o, Session & s );
+std::ostream & operator<<( std::ostream & o, One & s );
