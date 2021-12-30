@@ -1,12 +1,16 @@
 #pragma once
 #include <iostream>
 #include <sys/socket.h>
+#include <cerrno>
+#include <cstring>
+#include <unistd.h>
 #include <netinet/in.h>
+#define LISTEN_QLEN 32
 
 class Socket {
 	private:
-		int port;	
-		int fd;
+		int 		port;	
+		int 		fd;
 		std::string buff; 
 
 		void operator=(Socket const &) {}
@@ -14,9 +18,10 @@ class Socket {
 	public:
 
 		Socket( int port = 80 ) : port(port) {
+			/* std::cout << "buff: " << buff ; */
     		fd = socket(AF_INET, SOCK_STREAM, 0);
 			if (fd == -1) {
-				buff = "socket error";
+				buff = std::string("socket error: ") + std::string(std::strerror(errno));
 				return ;
 			}
     		int opt = 1;
@@ -27,14 +32,18 @@ class Socket {
 			addr.sin_addr.s_addr = htonl(INADDR_ANY);
 			addr.sin_port = htons(port);
 
-			if(-1 == bind(fd, (struct sockaddr*) &addr, sizeof(addr)))
-				perror("bind");
-    }
+			if(-1 == bind(fd, (struct sockaddr*) &addr, sizeof(addr))) {
+				buff = std::string("bind error: ") + std::string(std::strerror(errno));
+				close(fd);
+				fd = -1;
+				return ;
+			}
+			listen(fd, LISTEN_QLEN);
+    	}
 
-    listen(sock, LISTEN_QLEN);
-		}
-
-		~Socket() {}
+		~Socket() { close(fd); }
+		int 		getFd()   const { return fd; }
+		std::string getBuff() const { return buff; }
 
 
 

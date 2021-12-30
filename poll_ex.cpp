@@ -27,7 +27,6 @@ main (int argc, char *argv[])
 
   /*************************************************************/
   /* Create an AF_INET6 stream socket to receive incoming      */
-
   /* connections on                                           */
   /*************************************************************/
   listen_sd = socket(AF_INET6, SOCK_STREAM, 0);
@@ -107,7 +106,7 @@ main (int argc, char *argv[])
 
   /*************************************************************/
   /* Loop waiting for incoming connects or for incoming data   */
-  /* on any of the connected sockets.                          */
+  /* on any of the connected sockets.                            */
   /*************************************************************/
   do
   {
