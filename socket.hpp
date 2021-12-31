@@ -41,9 +41,13 @@ class Socket {
 			listen(fd, LISTEN_QLEN);
     	}
 
-		~Socket() { close(fd); }
+		~Socket() {
+			close(fd);
+			std::cout << port << "- port, socket closed" << std::endl;
+		}
 		int 		getFd()   const { return fd; }
 		std::string getBuff() const { return buff; }
+		int		    getPort() const { return port; }
 
 
 
