@@ -1,12 +1,14 @@
 #include <iostream>
 #pragma_once
+#define LISTENING_SESSION // zero stub for vector of FDs
 
 class Session {
 	private:
-		int	 fd;
+		int	 fd; // 0 if listening fd
 		std::string buffIn;
 		std::string buffOut;
-	public:
+//		std::string type = "default";
+public:
 		Session( int fd );
 		Session( const Session & copy );
 		~Session( void );

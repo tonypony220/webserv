@@ -20,9 +20,17 @@ int main () {
 	if (d.getFd() < 0)
 		std::cout << d.getBuff() << std::endl;
 	std::vector<pollfd> l;
-	pollfd ls;
+	pollfd ls = *(new pollfd);
+	pollfd ls2;
+	ls.fd = 4;
+	l.push_back(ls);
 	ls.fd = 2;
 	l.push_back(ls);
+	ls.fd = 3;
+	l.push_back(ls);
+	std::cout << "FD: " << (static_cast<struct pollfd*>(&l[0]))->fd << std::endl; ///(struct pollfd)
+	std::cout << "FD: " << (static_cast<struct pollfd*>(&l[0]) + 1)->fd << std::endl; ///(struct pollfd)
+	std::cout << "FD: " << (static_cast<struct pollfd*>(&l[0]) + 2)->fd << std::endl; ///(struct pollfd)
 	std::cout << "size: " << l.size() << std::endl;
 	std::cout << "FD: " << l[3].fd << std::endl;
 	std::cout << "size: " << l.size() << std::endl;
