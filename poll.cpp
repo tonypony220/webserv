@@ -13,19 +13,25 @@
 int timeout;
 // [] [] [] [] []
 
-int accept_connection(int listen_fd,
+int accept_connections(int listen_fd,
 					  std::vector<Session> & sessions,
 					  std::vector<pollfd> & fds) {
 	struct pollfd new_fd;
 
-	int new_socket_fd = accept(listen_fd, NULL, NULL);
-	if (new_socket_fd == -1) {
-		perror("accept error:");
-	} else {
-		new_fd.fd = new_socket_fd;
-		new_fd.events = POLLIN;
-		fds.push_back(new_fd);
-		sessions.push_back(Session(new_socket_fd));
+	while (new_socket_fd > -1)
+	{
+		int new_socket_fd = accept(listen_fd, NULL, NULL);
+		if (new_socket_fd == -1 && )
+		{
+			perror("accept error:");
+		} else
+		{
+			new_fd.fd = new_socket_fd;
+			new_fd.events = POLLIN;
+			fds.push_back(new_fd);
+			sessions.push_back(Session(new_socket_fd));
+
+		}
 	}
 
 }
@@ -63,8 +69,9 @@ int loop () {
 			/// fds[i].revents != events => Error
 			//this is expected if (fds[i].revents & POLLIN)
 			if (sessions[i].getFd() == LISTENING_SESSION) {
-				accept_connection(fds[i].fd, sessions, fds);
+				accept_connections(fds[i].fd, sessions, fds);
 			}
+
 
 //			fds[i].fd = it->getFd();
 //			fds[i].events = POLLIN;
