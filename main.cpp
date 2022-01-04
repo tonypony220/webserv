@@ -20,6 +20,8 @@ int main () {
 	if (d.getFd() < 0)
 		std::cout << d.getBuff() << std::endl;
 	std::vector<pollfd> l;
+	for (std::vector<pollfd>::iterator it = l.begin(); it != l.end(); it++)
+	}
 	pollfd ls = *(new pollfd);
 	pollfd ls2;
 	ls.fd = 4;

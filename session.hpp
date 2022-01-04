@@ -1,22 +1,35 @@
 #include <iostream>
-#pragma_once
-#define LISTENING_SESSION // zero stub for vector of FDs
+#pragma once
+#define LISTENING_SESSION 0// zero stub for vector of FDs
 
 class Session {
 	private:
-		int	 fd; // 0 if listening fd
+		int	 		fd; // 0 if listening fd
 		std::string buffIn;
 		std::string buffOut;
-//		std::string type = "default";
-public:
-		Session( int fd );
-		Session( const Session & copy );
-		~Session( void );
-		Session & operator=( const Session & other );
+	public:
+		Session( int fd ) : fd(fd) {}
 
-		int 		  getFd( void )   const { return fd; }
-		std::string getBuff( void )   const { return buffIn; }
+		Session( const Session & copy ) : fd(copy.getFd()) {} //, buffer(copy.getBuff()) {}
+
+		~Session( void ) {}
+
+		Session & operator=( const Session & other ) {
+			fd = other.getFd();
+			buffIn = other.getBuffIn();
+			buffOut = other.getBuffOut();
+			return *this;
+		}
+
+		int 		getFd( void )     const { return fd; }
+		std::string getBuffIn( void )   const { return buffIn; }
+		std::string getBuffOut( void )   const { return buffOut; }
 		bool 		toBeWrite( void ) const { return !buffOut.empty(); }
 };
 
-std::ostream & operator<<( std::ostream & o, Session & s );
+std::ostream & operator<<( std::ostream & o, Session & s ) {
+	o << "fd: " << s.getFd();
+	o << " buff: " << s.getBuffIn() << std::endl;
+	return (o);
+}
+
