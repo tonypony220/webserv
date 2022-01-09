@@ -1,0 +1,130 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CodeBlocks_project_file>
+	<FileVersion major="1" minor="6"/>
+	<Project>
+		<Option title="webserv"/>
+		<Option makefile_is_custom="1"/>
+		<Option compiler="gcc"/>
+		<Option virtualFolders="CMake Files\;"/>
+		<Build>
+			<Target title="all">
+				<Option working_dir="/Users/tonypony/coding/webserv/cmake-build-debug"/>
+				<Option type="4"/>
+				<MakeCommands>
+					<Build command="/usr/bin/make -j4 -f &quot;/Users/tonypony/coding/webserv/cmake-build-debug/Makefile&quot;  VERBOSE=1 all"/>
+					<CompileFile command="/usr/bin/make -j4 -f &quot;/Users/tonypony/coding/webserv/cmake-build-debug/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/make -j4 -f &quot;/Users/tonypony/coding/webserv/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/make -j4 -f &quot;/Users/tonypony/coding/webserv/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+			<Target title="rebuild_cache">
+				<Option working_dir="/Users/tonypony/coding/webserv/cmake-build-debug"/>
+				<Option type="4"/>
+				<MakeCommands>
+					<Build command="/usr/bin/make -j4 -f &quot;/Users/tonypony/coding/webserv/cmake-build-debug/Makefile&quot;  VERBOSE=1 rebuild_cache"/>
+					<CompileFile command="/usr/bin/make -j4 -f &quot;/Users/tonypony/coding/webserv/cmake-build-debug/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/make -j4 -f &quot;/Users/tonypony/coding/webserv/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/make -j4 -f &quot;/Users/tonypony/coding/webserv/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+			<Target title="edit_cache">
+				<Option working_dir="/Users/tonypony/coding/webserv/cmake-build-debug"/>
+				<Option type="4"/>
+				<MakeCommands>
+					<Build command="/usr/bin/make -j4 -f &quot;/Users/tonypony/coding/webserv/cmake-build-debug/Makefile&quot;  VERBOSE=1 edit_cache"/>
+					<CompileFile command="/usr/bin/make -j4 -f &quot;/Users/tonypony/coding/webserv/cmake-build-debug/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/make -j4 -f &quot;/Users/tonypony/coding/webserv/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/make -j4 -f &quot;/Users/tonypony/coding/webserv/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+			<Target title="webserv">
+				<Option output="/Users/tonypony/coding/webserv/cmake-build-debug/webserv" prefix_auto="0" extension_auto="0"/>
+				<Option working_dir="/Users/tonypony/coding/webserv/cmake-build-debug"/>
+				<Option object_output="./"/>
+				<Option type="1"/>
+				<Option compiler="gcc"/>
+				<Compiler>
+					<Add directory="/Users/tonypony/coding/webserv/."/>
+					<Add directory="/Library/Developer/CommandLineTools/usr/include/c++/v1"/>
+					<Add directory="/usr/local/include"/>
+					<Add directory="/Library/Developer/CommandLineTools/usr/lib/clang/10.0.0/include"/>
+					<Add directory="/Library/Developer/CommandLineTools/usr/include"/>
+					<Add directory="/usr/include"/>
+					<Add directory="/System/Library/Frameworks"/>
+					<Add directory="/Library/Frameworks"/>
+				</Compiler>
+				<MakeCommands>
+					<Build command="/usr/bin/make -j4 -f &quot;/Users/tonypony/coding/webserv/cmake-build-debug/Makefile&quot;  VERBOSE=1 webserv"/>
+					<CompileFile command="/usr/bin/make -j4 -f &quot;/Users/tonypony/coding/webserv/cmake-build-debug/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/make -j4 -f &quot;/Users/tonypony/coding/webserv/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/make -j4 -f &quot;/Users/tonypony/coding/webserv/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+			<Target title="webserv/fast">
+				<Option output="/Users/tonypony/coding/webserv/cmake-build-debug/webserv" prefix_auto="0" extension_auto="0"/>
+				<Option working_dir="/Users/tonypony/coding/webserv/cmake-build-debug"/>
+				<Option object_output="./"/>
+				<Option type="1"/>
+				<Option compiler="gcc"/>
+				<Compiler>
+					<Add directory="/Users/tonypony/coding/webserv/."/>
+					<Add directory="/Library/Developer/CommandLineTools/usr/include/c++/v1"/>
+					<Add directory="/usr/local/include"/>
+					<Add directory="/Library/Developer/CommandLineTools/usr/lib/clang/10.0.0/include"/>
+					<Add directory="/Library/Developer/CommandLineTools/usr/include"/>
+					<Add directory="/usr/include"/>
+					<Add directory="/System/Library/Frameworks"/>
+					<Add directory="/Library/Frameworks"/>
+				</Compiler>
+				<MakeCommands>
+					<Build command="/usr/bin/make -j4 -f &quot;/Users/tonypony/coding/webserv/cmake-build-debug/Makefile&quot;  VERBOSE=1 webserv/fast"/>
+					<CompileFile command="/usr/bin/make -j4 -f &quot;/Users/tonypony/coding/webserv/cmake-build-debug/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/make -j4 -f &quot;/Users/tonypony/coding/webserv/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/make -j4 -f &quot;/Users/tonypony/coding/webserv/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+		</Build>
+		<Unit filename="/Users/tonypony/coding/webserv/Session.hpp">
+			<Option target="webserv"/>
+		</Unit>
+		<Unit filename="/Users/tonypony/coding/webserv/Socket.hpp">
+			<Option target="webserv"/>
+		</Unit>
+		<Unit filename="/Users/tonypony/coding/webserv/main.cpp">
+			<Option target="webserv"/>
+		</Unit>
+		<Unit filename="/Users/tonypony/coding/webserv/one.hpp">
+			<Option target="webserv"/>
+		</Unit>
+		<Unit filename="/Users/tonypony/coding/webserv/poll.cpp">
+			<Option target="webserv"/>
+		</Unit>
+		<Unit filename="/Users/tonypony/coding/webserv/poll_ex.cpp">
+			<Option target="webserv"/>
+		</Unit>
+		<Unit filename="/Users/tonypony/coding/webserv/select.cpp">
+			<Option target="webserv"/>
+		</Unit>
+		<Unit filename="/Users/tonypony/coding/webserv/session.cpp">
+			<Option target="webserv"/>
+		</Unit>
+		<Unit filename="/Users/tonypony/coding/webserv/session.hpp">
+			<Option target="webserv"/>
+		</Unit>
+		<Unit filename="/Users/tonypony/coding/webserv/socket.c">
+			<Option target="webserv"/>
+		</Unit>
+		<Unit filename="/Users/tonypony/coding/webserv/socket.hpp">
+			<Option target="webserv"/>
+		</Unit>
+		<Unit filename="/Users/tonypony/coding/webserv/t.cpp">
+			<Option target="webserv"/>
+		</Unit>
+		<Unit filename="/Users/tonypony/coding/webserv/tcp_questn.c">
+			<Option target="webserv"/>
+		</Unit>
+		<Unit filename="/Users/tonypony/coding/webserv/CMakeLists.txt">
+			<Option virtualFolder="CMake Files\"/>
+		</Unit>
+	</Project>
+</CodeBlocks_project_file>

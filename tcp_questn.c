@@ -6,7 +6,6 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 
-
 #ifndef INBUFSIZE
 #define INBUFSIZE 1024
 #endif
@@ -145,7 +144,7 @@ static int session_do_read(struct session *sess)
 		write(1, m, strlen(m));
         return 0;   /* this means "don't continue" for the caller */
     }
-	write(1, sess->buf + bufp, INBUFSIZE - bufp);
+//	write(1, sess->buf + bufp, INBUFSIZE - bufp);
     sess->buf_used += rc;
     session_check_lf(sess);
     if(sess->buf_used >= INBUFSIZE) {
