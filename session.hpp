@@ -9,9 +9,22 @@
 #define DONE 0
 //#define MORE 1
 
+void replace(std::string & str, std::string const & s1, std::string const & s2)
+{
+	std::size_t found = str.find( s1 );
+	while ( found != std::string::npos ) {
+		/* std::cout << found << std::endl; */
+		str.erase( found, s1.length() );
+		str.insert( found, s2 );
+		found = str.find( s1 );
+	}
+}
+
+
 class Session {
 	private:
 		int	 		 fd; // 0 if listening fd
+//		std::vector<HttpSession> ss;
 		HttpRequest  request;
 		HttpResponse response;
 
@@ -44,8 +57,15 @@ class Session {
 		int 		 process_event( short event ) {
 			if (event == POLLIN) {
 				int rc = request.readSocket();
-				std::cout << "buffer: " << request.getBuffer() << "$" << std::endl;
-				if (rc == DONE)
+
+				std::string buff = request.getBuffer();
+//				replace(buff, "\n", "LF\n");
+//				replace(buff, "\r", "CR\r");
+
+				replace(buff, "\r\n", " CRLF ");
+				std::cout << "bukfer: " << buff << "$" << std::endl;
+
+//				if (rc == DONE)
 //					std::cout << "buffer: " << request.getBuffer() << "$" << std::endl;
 				return rc;
 			}
@@ -55,6 +75,7 @@ class Session {
 			return 0;
 		}
 };
+
 
 std::ostream & operator<<( std::ostream & o, Session & s ) {
 	o << "fd: " << s.getFd();

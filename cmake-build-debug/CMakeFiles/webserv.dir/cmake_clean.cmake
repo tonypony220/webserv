@@ -1,10 +1,8 @@
 file(REMOVE_RECURSE
+  "CMakeFiles/webserv.dir/SocketTCP.c.o"
   "CMakeFiles/webserv.dir/main.cpp.o"
   "CMakeFiles/webserv.dir/poll.cpp.o"
-  "CMakeFiles/webserv.dir/poll_ex.cpp.o"
   "CMakeFiles/webserv.dir/select.cpp.o"
-  "CMakeFiles/webserv.dir/session.cpp.o"
-  "CMakeFiles/webserv.dir/socket.c.o"
   "CMakeFiles/webserv.dir/t.cpp.o"
   "CMakeFiles/webserv.dir/tcp_questn.c.o"
   "webserv"

@@ -143,6 +143,33 @@ webserv/fast:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/webserv.dir/build.make CMakeFiles/webserv.dir/build
 .PHONY : webserv/fast
 
+SocketTCP.o: SocketTCP.c.o
+
+.PHONY : SocketTCP.o
+
+# target to build an object file
+SocketTCP.c.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/webserv.dir/build.make CMakeFiles/webserv.dir/SocketTCP.c.o
+.PHONY : SocketTCP.c.o
+
+SocketTCP.i: SocketTCP.c.i
+
+.PHONY : SocketTCP.i
+
+# target to preprocess a source file
+SocketTCP.c.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/webserv.dir/build.make CMakeFiles/webserv.dir/SocketTCP.c.i
+.PHONY : SocketTCP.c.i
+
+SocketTCP.s: SocketTCP.c.s
+
+.PHONY : SocketTCP.s
+
+# target to generate assembly for a file
+SocketTCP.c.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/webserv.dir/build.make CMakeFiles/webserv.dir/SocketTCP.c.s
+.PHONY : SocketTCP.c.s
+
 main.o: main.cpp.o
 
 .PHONY : main.o
@@ -197,33 +224,6 @@ poll.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/webserv.dir/build.make CMakeFiles/webserv.dir/poll.cpp.s
 .PHONY : poll.cpp.s
 
-poll_ex.o: poll_ex.cpp.o
-
-.PHONY : poll_ex.o
-
-# target to build an object file
-poll_ex.cpp.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/webserv.dir/build.make CMakeFiles/webserv.dir/poll_ex.cpp.o
-.PHONY : poll_ex.cpp.o
-
-poll_ex.i: poll_ex.cpp.i
-
-.PHONY : poll_ex.i
-
-# target to preprocess a source file
-poll_ex.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/webserv.dir/build.make CMakeFiles/webserv.dir/poll_ex.cpp.i
-.PHONY : poll_ex.cpp.i
-
-poll_ex.s: poll_ex.cpp.s
-
-.PHONY : poll_ex.s
-
-# target to generate assembly for a file
-poll_ex.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/webserv.dir/build.make CMakeFiles/webserv.dir/poll_ex.cpp.s
-.PHONY : poll_ex.cpp.s
-
 select.o: select.cpp.o
 
 .PHONY : select.o
@@ -250,60 +250,6 @@ select.s: select.cpp.s
 select.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/webserv.dir/build.make CMakeFiles/webserv.dir/select.cpp.s
 .PHONY : select.cpp.s
-
-session.o: session.cpp.o
-
-.PHONY : session.o
-
-# target to build an object file
-session.cpp.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/webserv.dir/build.make CMakeFiles/webserv.dir/session.cpp.o
-.PHONY : session.cpp.o
-
-session.i: session.cpp.i
-
-.PHONY : session.i
-
-# target to preprocess a source file
-session.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/webserv.dir/build.make CMakeFiles/webserv.dir/session.cpp.i
-.PHONY : session.cpp.i
-
-session.s: session.cpp.s
-
-.PHONY : session.s
-
-# target to generate assembly for a file
-session.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/webserv.dir/build.make CMakeFiles/webserv.dir/session.cpp.s
-.PHONY : session.cpp.s
-
-socket.o: socket.c.o
-
-.PHONY : socket.o
-
-# target to build an object file
-socket.c.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/webserv.dir/build.make CMakeFiles/webserv.dir/socket.c.o
-.PHONY : socket.c.o
-
-socket.i: socket.c.i
-
-.PHONY : socket.i
-
-# target to preprocess a source file
-socket.c.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/webserv.dir/build.make CMakeFiles/webserv.dir/socket.c.i
-.PHONY : socket.c.i
-
-socket.s: socket.c.s
-
-.PHONY : socket.s
-
-# target to generate assembly for a file
-socket.c.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/webserv.dir/build.make CMakeFiles/webserv.dir/socket.c.s
-.PHONY : socket.c.s
 
 t.o: t.cpp.o
 
@@ -368,24 +314,18 @@ help:
 	@echo "... edit_cache"
 	@echo "... rebuild_cache"
 	@echo "... webserv"
+	@echo "... SocketTCP.o"
+	@echo "... SocketTCP.i"
+	@echo "... SocketTCP.s"
 	@echo "... main.o"
 	@echo "... main.i"
 	@echo "... main.s"
 	@echo "... poll.o"
 	@echo "... poll.i"
 	@echo "... poll.s"
-	@echo "... poll_ex.o"
-	@echo "... poll_ex.i"
-	@echo "... poll_ex.s"
 	@echo "... select.o"
 	@echo "... select.i"
 	@echo "... select.s"
-	@echo "... session.o"
-	@echo "... session.i"
-	@echo "... session.s"
-	@echo "... socket.o"
-	@echo "... socket.i"
-	@echo "... socket.s"
 	@echo "... t.o"
 	@echo "... t.i"
 	@echo "... t.s"

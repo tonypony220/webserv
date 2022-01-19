@@ -5,7 +5,7 @@ set(CMAKE_DEPENDS_LANGUAGES
   )
 # The set of files for implicit dependencies of each language:
 set(CMAKE_DEPENDS_CHECK_C
-  "/Users/tonypony/coding/webserv/socket.c" "/Users/tonypony/coding/webserv/cmake-build-debug/CMakeFiles/webserv.dir/socket.c.o"
+  "/Users/tonypony/coding/webserv/SocketTCP.c" "/Users/tonypony/coding/webserv/cmake-build-debug/CMakeFiles/webserv.dir/SocketTCP.c.o"
   "/Users/tonypony/coding/webserv/tcp_questn.c" "/Users/tonypony/coding/webserv/cmake-build-debug/CMakeFiles/webserv.dir/tcp_questn.c.o"
   )
 set(CMAKE_C_COMPILER_ID "AppleClang")
@@ -17,9 +17,7 @@ set(CMAKE_C_TARGET_INCLUDE_PATH
 set(CMAKE_DEPENDS_CHECK_CXX
   "/Users/tonypony/coding/webserv/main.cpp" "/Users/tonypony/coding/webserv/cmake-build-debug/CMakeFiles/webserv.dir/main.cpp.o"
   "/Users/tonypony/coding/webserv/poll.cpp" "/Users/tonypony/coding/webserv/cmake-build-debug/CMakeFiles/webserv.dir/poll.cpp.o"
-  "/Users/tonypony/coding/webserv/poll_ex.cpp" "/Users/tonypony/coding/webserv/cmake-build-debug/CMakeFiles/webserv.dir/poll_ex.cpp.o"
   "/Users/tonypony/coding/webserv/select.cpp" "/Users/tonypony/coding/webserv/cmake-build-debug/CMakeFiles/webserv.dir/select.cpp.o"
-  "/Users/tonypony/coding/webserv/session.cpp" "/Users/tonypony/coding/webserv/cmake-build-debug/CMakeFiles/webserv.dir/session.cpp.o"
   "/Users/tonypony/coding/webserv/t.cpp" "/Users/tonypony/coding/webserv/cmake-build-debug/CMakeFiles/webserv.dir/t.cpp.o"
   )
 set(CMAKE_CXX_COMPILER_ID "AppleClang")

@@ -103,22 +103,9 @@ CMakeFiles/webserv.dir/poll.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/webserv.dir/poll.cpp.s"
 	/Library/Developer/CommandLineTools/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /Users/tonypony/coding/webserv/poll.cpp -o CMakeFiles/webserv.dir/poll.cpp.s
 
-CMakeFiles/webserv.dir/poll_ex.cpp.o: CMakeFiles/webserv.dir/flags.make
-CMakeFiles/webserv.dir/poll_ex.cpp.o: ../poll_ex.cpp
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/Users/tonypony/coding/webserv/cmake-build-debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_3) "Building CXX object CMakeFiles/webserv.dir/poll_ex.cpp.o"
-	/Library/Developer/CommandLineTools/usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/webserv.dir/poll_ex.cpp.o -c /Users/tonypony/coding/webserv/poll_ex.cpp
-
-CMakeFiles/webserv.dir/poll_ex.cpp.i: cmake_force
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/webserv.dir/poll_ex.cpp.i"
-	/Library/Developer/CommandLineTools/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /Users/tonypony/coding/webserv/poll_ex.cpp > CMakeFiles/webserv.dir/poll_ex.cpp.i
-
-CMakeFiles/webserv.dir/poll_ex.cpp.s: cmake_force
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/webserv.dir/poll_ex.cpp.s"
-	/Library/Developer/CommandLineTools/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /Users/tonypony/coding/webserv/poll_ex.cpp -o CMakeFiles/webserv.dir/poll_ex.cpp.s
-
 CMakeFiles/webserv.dir/select.cpp.o: CMakeFiles/webserv.dir/flags.make
 CMakeFiles/webserv.dir/select.cpp.o: ../select.cpp
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/Users/tonypony/coding/webserv/cmake-build-debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_4) "Building CXX object CMakeFiles/webserv.dir/select.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/Users/tonypony/coding/webserv/cmake-build-debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_3) "Building CXX object CMakeFiles/webserv.dir/select.cpp.o"
 	/Library/Developer/CommandLineTools/usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/webserv.dir/select.cpp.o -c /Users/tonypony/coding/webserv/select.cpp
 
 CMakeFiles/webserv.dir/select.cpp.i: cmake_force
@@ -129,35 +116,22 @@ CMakeFiles/webserv.dir/select.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/webserv.dir/select.cpp.s"
 	/Library/Developer/CommandLineTools/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /Users/tonypony/coding/webserv/select.cpp -o CMakeFiles/webserv.dir/select.cpp.s
 
-CMakeFiles/webserv.dir/session.cpp.o: CMakeFiles/webserv.dir/flags.make
-CMakeFiles/webserv.dir/session.cpp.o: ../session.cpp
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/Users/tonypony/coding/webserv/cmake-build-debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_5) "Building CXX object CMakeFiles/webserv.dir/session.cpp.o"
-	/Library/Developer/CommandLineTools/usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/webserv.dir/session.cpp.o -c /Users/tonypony/coding/webserv/session.cpp
+CMakeFiles/webserv.dir/SocketTCP.c.o: CMakeFiles/webserv.dir/flags.make
+CMakeFiles/webserv.dir/SocketTCP.c.o: ../SocketTCP.c
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/Users/tonypony/coding/webserv/cmake-build-debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_4) "Building C object CMakeFiles/webserv.dir/SocketTCP.c.o"
+	/Library/Developer/CommandLineTools/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -o CMakeFiles/webserv.dir/SocketTCP.c.o   -c /Users/tonypony/coding/webserv/SocketTCP.c
 
-CMakeFiles/webserv.dir/session.cpp.i: cmake_force
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/webserv.dir/session.cpp.i"
-	/Library/Developer/CommandLineTools/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /Users/tonypony/coding/webserv/session.cpp > CMakeFiles/webserv.dir/session.cpp.i
+CMakeFiles/webserv.dir/SocketTCP.c.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing C source to CMakeFiles/webserv.dir/SocketTCP.c.i"
+	/Library/Developer/CommandLineTools/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -E /Users/tonypony/coding/webserv/SocketTCP.c > CMakeFiles/webserv.dir/SocketTCP.c.i
 
-CMakeFiles/webserv.dir/session.cpp.s: cmake_force
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/webserv.dir/session.cpp.s"
-	/Library/Developer/CommandLineTools/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /Users/tonypony/coding/webserv/session.cpp -o CMakeFiles/webserv.dir/session.cpp.s
-
-CMakeFiles/webserv.dir/socket.c.o: CMakeFiles/webserv.dir/flags.make
-CMakeFiles/webserv.dir/socket.c.o: ../socket.c
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/Users/tonypony/coding/webserv/cmake-build-debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_6) "Building C object CMakeFiles/webserv.dir/socket.c.o"
-	/Library/Developer/CommandLineTools/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -o CMakeFiles/webserv.dir/socket.c.o   -c /Users/tonypony/coding/webserv/socket.c
-
-CMakeFiles/webserv.dir/socket.c.i: cmake_force
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing C source to CMakeFiles/webserv.dir/socket.c.i"
-	/Library/Developer/CommandLineTools/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -E /Users/tonypony/coding/webserv/socket.c > CMakeFiles/webserv.dir/socket.c.i
-
-CMakeFiles/webserv.dir/socket.c.s: cmake_force
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling C source to assembly CMakeFiles/webserv.dir/socket.c.s"
-	/Library/Developer/CommandLineTools/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -S /Users/tonypony/coding/webserv/socket.c -o CMakeFiles/webserv.dir/socket.c.s
+CMakeFiles/webserv.dir/SocketTCP.c.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling C source to assembly CMakeFiles/webserv.dir/SocketTCP.c.s"
+	/Library/Developer/CommandLineTools/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -S /Users/tonypony/coding/webserv/SocketTCP.c -o CMakeFiles/webserv.dir/SocketTCP.c.s
 
 CMakeFiles/webserv.dir/t.cpp.o: CMakeFiles/webserv.dir/flags.make
 CMakeFiles/webserv.dir/t.cpp.o: ../t.cpp
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/Users/tonypony/coding/webserv/cmake-build-debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_7) "Building CXX object CMakeFiles/webserv.dir/t.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/Users/tonypony/coding/webserv/cmake-build-debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_5) "Building CXX object CMakeFiles/webserv.dir/t.cpp.o"
 	/Library/Developer/CommandLineTools/usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/webserv.dir/t.cpp.o -c /Users/tonypony/coding/webserv/t.cpp
 
 CMakeFiles/webserv.dir/t.cpp.i: cmake_force
@@ -170,7 +144,7 @@ CMakeFiles/webserv.dir/t.cpp.s: cmake_force
 
 CMakeFiles/webserv.dir/tcp_questn.c.o: CMakeFiles/webserv.dir/flags.make
 CMakeFiles/webserv.dir/tcp_questn.c.o: ../tcp_questn.c
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/Users/tonypony/coding/webserv/cmake-build-debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_8) "Building C object CMakeFiles/webserv.dir/tcp_questn.c.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/Users/tonypony/coding/webserv/cmake-build-debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_6) "Building C object CMakeFiles/webserv.dir/tcp_questn.c.o"
 	/Library/Developer/CommandLineTools/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -o CMakeFiles/webserv.dir/tcp_questn.c.o   -c /Users/tonypony/coding/webserv/tcp_questn.c
 
 CMakeFiles/webserv.dir/tcp_questn.c.i: cmake_force
@@ -185,10 +159,8 @@ CMakeFiles/webserv.dir/tcp_questn.c.s: cmake_force
 webserv_OBJECTS = \
 "CMakeFiles/webserv.dir/main.cpp.o" \
 "CMakeFiles/webserv.dir/poll.cpp.o" \
-"CMakeFiles/webserv.dir/poll_ex.cpp.o" \
 "CMakeFiles/webserv.dir/select.cpp.o" \
-"CMakeFiles/webserv.dir/session.cpp.o" \
-"CMakeFiles/webserv.dir/socket.c.o" \
+"CMakeFiles/webserv.dir/SocketTCP.c.o" \
 "CMakeFiles/webserv.dir/t.cpp.o" \
 "CMakeFiles/webserv.dir/tcp_questn.c.o"
 
@@ -197,15 +169,13 @@ webserv_EXTERNAL_OBJECTS =
 
 webserv: CMakeFiles/webserv.dir/main.cpp.o
 webserv: CMakeFiles/webserv.dir/poll.cpp.o
-webserv: CMakeFiles/webserv.dir/poll_ex.cpp.o
 webserv: CMakeFiles/webserv.dir/select.cpp.o
-webserv: CMakeFiles/webserv.dir/session.cpp.o
-webserv: CMakeFiles/webserv.dir/socket.c.o
+webserv: CMakeFiles/webserv.dir/SocketTCP.c.o
 webserv: CMakeFiles/webserv.dir/t.cpp.o
 webserv: CMakeFiles/webserv.dir/tcp_questn.c.o
 webserv: CMakeFiles/webserv.dir/build.make
 webserv: CMakeFiles/webserv.dir/link.txt
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --bold --progress-dir=/Users/tonypony/coding/webserv/cmake-build-debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_9) "Linking CXX executable webserv"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --bold --progress-dir=/Users/tonypony/coding/webserv/cmake-build-debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_7) "Linking CXX executable webserv"
 	$(CMAKE_COMMAND) -E cmake_link_script CMakeFiles/webserv.dir/link.txt --verbose=$(VERBOSE)
 
 # Rule to build all files generated by this target.
