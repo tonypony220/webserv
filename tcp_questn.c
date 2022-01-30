@@ -295,21 +295,25 @@ static int server_go(struct server_str *serv)
 
 int main(int argc, const char * const *argv)
 {
-    struct server_str server;
-    long port;
-    char *endptr;
+	struct server_str server;
+	long port;
+	char *endptr;
 
-    if(argc != 3) {
-        fprintf(stderr, "Usage: serv <port> <log_file_name>\n");
-        return 1;
-    }
+	if (argc != 3)
+	{
+		fprintf(stderr, "Usage: serv <port> <log_file_name>\n");
+		return 1;
+	}
 
-    port = strtol(argv[1], &endptr, 10);
-    if(!*argv[1] || *endptr) {
-        fprintf(stderr, "Invalid port number\n");
-        return 2;
-    }
+	port = strtol(argv[1], &endptr, 10);
+	if (!*argv[1] || *endptr)
+	{
+		fprintf(stderr, "Invalid port number\n");
+		return 2;
+	}
 
-    if(!server_init(&server, port, argv[2]))
-        return 3;
+	if (!server_init(&server, port, argv[2]))
+		return 3;
 
+
+}

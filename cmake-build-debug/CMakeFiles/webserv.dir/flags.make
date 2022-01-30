@@ -9,7 +9,7 @@ C_DEFINES =
 
 C_INCLUDES = -I/Users/tonypony/coding/webserv/. 
 
-CXX_FLAGS = -g   -std=gnu++14
+CXX_FLAGS =  -std=c++98 -g   -std=gnu++98
 
 CXX_DEFINES = 
 

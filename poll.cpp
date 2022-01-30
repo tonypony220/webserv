@@ -1,5 +1,5 @@
 #include <sys/poll.h>
-#include "Session.hpp"
+#include "HttpSession.hpp"
 #include "SocketTCP.hpp"
 #include <vector>
 #include <sys/socket.h>
@@ -15,20 +15,20 @@ struct pollfddddd {
 int timeout;
 int stop = 0;
 
-int close_connection(std::vector<Session> & sessions,
+int close_connection(std::vector<HttpSession> & sessions,
 					 std::vector<pollfd> & fds) {
 	return 0;
 }
 
 int accept_connections(int listen_fd,
-					   std::vector<Session> & sessions,
+					   std::vector<HttpSession> & sessions,
 					   std::vector<pollfd> & fds) {
 	struct pollfd new_fd;
 	int new_socket_fd = 0;
 
 //	while (new_socket_fd > -1)
 //	{
-//		std::cout << "HERE1" << std::endl;
+//		std::cout << "adress of sssions: " << &sessions << std::endl;
 		new_socket_fd = accept(listen_fd, NULL, NULL);
 		if (new_socket_fd == -1 && errno != EWOULDBLOCK) {
 			perror("accept error: ");
@@ -36,7 +36,7 @@ int accept_connections(int listen_fd,
 			new_fd.fd = new_socket_fd;
 			new_fd.events = POLLIN;
 			fds.push_back(new_fd);
-			sessions.push_back(Session(new_socket_fd));
+			sessions.push_back(HttpSession(new_socket_fd));
 		}
 //		std::cout << "HERE2" << std::endl;
 //	}
@@ -48,7 +48,7 @@ int accept_connections(int listen_fd,
 
 int loop () {
 	std::vector<struct pollfd> fds;
-	std::vector<Session> sessions;
+	std::vector<HttpSession> tcpSessions;
 	struct pollfd new_fd;
 	int timeout = 1 * 1000; // 3 min (3 * 60 * 1000)
 
@@ -56,36 +56,37 @@ int loop () {
 	// adding sockets
 	for (std::vector<SocketTCP>::iterator it = sockets.begin(); it != sockets.end(); it++) {
 		if (it->openSocket())
-			continue;
+			continue; // todo. exit on error
 		new_fd.fd = it->getFd();
 		new_fd.events = POLLIN;
 		fds.push_back(new_fd);
-		sessions.push_back(Session(0));
+		tcpSessions.push_back(HttpSession(0));
 	}
+//	std::cout << "adress of sssions: " << &tcpSessions << std::endl;
 	for (;;) {
 		int rc = poll(&fds[0], fds.size(), timeout);
 		if (rc < 0)
 			perror("poll error");
 
-		std::cout << "Status: " << "fds:" << fds.size();
-		std::cout << " sessions:" << sessions.size();
-		std::cout << " poll=" << rc << std::endl;
+//		std::cout << "Status: " << "fds:" << fds.size();
+//		std::cout << " sessions:" << sessions.size();
+//		std::cout << " poll=" << rc << std::endl
 
-		for (int i = 0; i < sessions.size(); i++) {
+		for (int i = 0; i < tcpSessions.size(); i++) {
 //			std::cout << i << std::endl;
 			if (fds[i].revents == 0)
 				continue;
 			/// fds[i].revents != events => Error
 			/// this is expected if (fds[i].revents & POLLIN)
-			if (sessions[i].getFd() == LISTENING_SESSION) {
-				accept_connections(fds[i].fd, sessions, fds);
+			if (tcpSessions[i].getFd() == LISTENING_SESSION) {
+				accept_connections(fds[i].fd, tcpSessions, fds);
 				continue;
 			}
-			if (sessions[i].process_event(fds[i].revents) == 0) {
+			if (tcpSessions[i].processEvent(fds[i].revents) == 0) {
 //				close_connection(sessions, fds);
 				close(fds[i].fd);
 				// https://stackoverflow.com/questions/9927163/erase-element-in-vector-while-iterating-the-same-vector
-				sessions.erase(sessions.begin() + i);
+				tcpSessions.erase(tcpSessions.begin() + i);
 				fds.erase(fds.begin() + i);
 				i--; // keeps index in same place;
 			}

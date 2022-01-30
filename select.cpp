@@ -1,9 +1,9 @@
 #include <sys/select.h>
-#include "session.hpp"
+#include "HttpSession.hpp"
 #include <vector>
 
 int ls; // listening socket
-std::vector<Session> sessions;
+std::vector<HttpSession> sessions;
 
 int main () {
 	while (1) {
@@ -15,7 +15,7 @@ int main () {
 		FD_ZERO(&write_fds);
 		FD_SET(ls, &read_fds);
 
-		std::vector<Session>::iterator session;
+		std::vector<HttpSession>::iterator session;
 		for (session = sessions.begin(); session < sessions.end(); session++) {
 			FD_SET(session->getFd(), &read_fds);
 			if (session->toBeWrite())
