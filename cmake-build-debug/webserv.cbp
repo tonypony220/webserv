@@ -84,7 +84,7 @@
 				</MakeCommands>
 			</Target>
 		</Build>
-		<Unit filename="/Users/tonypony/coding/webserv/Session.hpp">
+		<Unit filename="/Users/tonypony/coding/webserv/HttpSession.hpp">
 			<Option target="webserv"/>
 		</Unit>
 		<Unit filename="/Users/tonypony/coding/webserv/SocketTCP.c">

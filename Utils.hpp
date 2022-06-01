@@ -1,7 +1,45 @@
 #pragma once
+#include <sstream>
+#include <iostream>
 #include <map>
 #include <vector>
 #include <algorithm>
+# define RED 	 "\033[1;31m"
+# define GREEN   "\033[0;32m"
+# define YELLOW	 "\033[1;33m"
+# define BLUE	 "\033[1;34m"
+# define PURPLE  "\033[1;35m"
+# define CYAN    "\033[1;36m"
+# define RESET   "\033[0;0m"
+# define BOLD    "\033[;1m"
+# define REVERSE "\033[;7m"
+#define VERBOSE
+
+template <class T> 
+void log(const T & t) { std::cout << t << std::endl; }
+
+template <class T, class T2> 
+void log(const T & t, const T2 & t2) { std::cout << t  << t2 << std::endl; }
+
+template <class T, class T2, class T3> 
+void log(const T & t, const T2 & t2, const T3 & t3) { std::cout << t << ' ' << t2 <<' ' << t3 << std::endl; }
+
+template <class T, class T2, class T3, class T4> 
+void log(const T & t, const T2 & t2, const T3 & t3, const T4 & t4) { std::cout << t << ' ' << t2 <<' ' << t3 << ' ' << t4 << std::endl; }
+
+template <class T> 
+std::string itoa(T & i) {
+	std::stringstream out;
+	out << i;
+	return out.str();
+		//s = out.str();
+}
+
+template <class T1, class T2>
+void construct(T1* p, const T2& value) {
+	new (p) T1(value);
+   // new (reinterpret_cast<void*>(p)) T1 ( value );
+}
 
 void ltrim(std::string & s) {
 	s.erase(s.begin(),
