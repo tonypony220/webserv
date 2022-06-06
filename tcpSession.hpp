@@ -10,16 +10,19 @@
 //#define BUFF_SIZE 3
 //#define MORE 1
 
-class IOInterface {
+class IOInterface { // fd not assumed to be always  duplex
 protected:
 	int	 		 	fd; // 0 if listening fd
 public: 
 	IOInterface(int  fd_, Server * serv) 
-		: fd(fd_), server_ptr(serv) 
+		: fd(fd_), counter(0), server_ptr(serv) 
 	{
 		log("IOInterface created fd: ", fd);
 	}
-	virtual			~IOInterface() {}
+	size_t			counter;
+	virtual			~IOInterface() {
+		log(counter, " IOInterface destructed: ", fd);
+	}
 	int 		 	getFd( void ) const { return fd; }
 	Server * 		getServ( void ) const { return server_ptr; }
 	virtual int		processEvent( short event ) {};
@@ -137,8 +140,8 @@ class tcpSession : public IOInterface {
 	int 		 processEvent( short event ) {
 		int ret;
 		if (event & POLLIN) {
-			log("\tsession reading...fd=",fd);
 			ret = readSocket();
+			log("\tsession reading...fd= ", fd);
 			if (ret == ERROR)
 				return ERROR;
 		}
@@ -174,7 +177,7 @@ class tcpSession : public IOInterface {
 		log("write to socket:", PURPLE, buff, RESET); //fd &&
 		int 		rc = ::write(fd, buff.c_str(), buff.size());
 		if (rc < 0) {
-			std::cerr << "write error: " << strerror(errno);
+			std::cerr << RED"write error: "RESET << strerror(errno);
 			return ERROR;
 		} //if (rc == 0) { ????????????
 		buffer.erase(0, rc);
@@ -186,10 +189,12 @@ class tcpSession : public IOInterface {
 		char buff[BUFF_SIZE];
 		memset(buff, 0, BUFF_SIZE);
 		int rc = read(fd, buff, BUFF_SIZE - 1);
-		if (rc == 0) 
-			return END;
+		if (rc == 0) {
+			std::cerr << RED"closed"RESET;
+			return ERROR; //TODO should return  END
+		}
 		if (rc < 0) {
-			std::cerr << "read error: " << strerror(errno);
+			std::cerr << RED"read error: "RESET << strerror(errno);
 			return ERROR;
 		}
 		buffer.append( buff );

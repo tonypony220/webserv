@@ -1,15 +1,20 @@
-#include "HttpSession.hpp"
+#include "Utils.hpp"
 #include <vector>
+using namespace std;
 
 int main () {
-	std::vector<HttpSession> v;
-	HttpSession s(2);
-//	Session ss(3);
+	cout << hextoi("124") << '\n';
+	string a("aaaxxaaa");
+	string b("bbbb");
+	b.append(a.begin(), a.begin() + 3);
 
-	v.push_back(s);
-	v.push_back(HttpSession(33));
-
-	for(std::vector<HttpSession>::iterator it = v.begin(); it != v.end(); ++it) {
-		std::cout << *it << std::endl;
-	}
+	unsigned int x;   
+    std::stringstream ss;
+    ss << std::hex << "12x";
+    ss >> x;
+    // output it as a signed type
+    std::cout << static_cast<int>(x) << std::endl;
+	string n("a");
+	cout << toupper(n[0]) << '\n';
+	cout << validate_hex(n) << '\n';
 }

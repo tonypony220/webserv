@@ -18,10 +18,11 @@
 #define ERROR 	  		-1
 #define SUCCESS 		 0
 #define END 			 1
+#define CRLF "\r\n"
 
 
 std::string HttpMethods[] = {"GET", "POST", "PUT", "CONNECT", "DELETE", "OPTIONS", "TRACE"};
-std::string HttpMethodsImplemented[] = {"GET", "POST", "DELETE"};
+std::string HttpMethodsImplemented[] = {"GET", "POST", "DELETE", "PUT" };
 /*  *** Examples *** :
 Client request:
 
@@ -58,7 +59,11 @@ class HttpParser {
 	std::string 	target;
 	std::string 	version;
 	std::string 	protocol;
+	std::string 	transfer_encoding;
 	unsigned long 	length; // content lenght
+	unsigned long 	counter;
+	size_t 			chunk_size; // current chunk size 
+	bool			chunk_size_parsed;
 
 	// maybe not good way to do it
 	typedef std::map< std::string, std::string >::iterator headerItor;
@@ -76,6 +81,8 @@ class HttpParser {
 		  length(0), 
 		  verbose(true), 
 		  code(0), 
+		  counter(0),
+		  chunk_size_parsed(false),
 		  server_ptr(serv) {
 		verbose && std::cout << "HttpParser created"  << std::endl; 
 	}
@@ -119,11 +126,12 @@ class HttpParser {
 //		}
 
 	int parseInput(std::string & input) {
-//		verbose && std::cout << "parsing.." << std::endl;
+		counter++;
+		//verbose && std::cout << "parsing.." << std::endl;
+		verbose && std::cout << "parsing input buffer: "BLUE << input << RESET << std::endl;
 		while ( !input.empty() && !isComplete() ) {
-			//verbose && std::cout << "parsing input buffer: "BLUE << input << RESET << std::endl;
 			//verbose && std::cout << "input buffer: " << input << std::endl;
-			buffer.clear();	
+			//buffer.clear();	
 			if (state < PARSE_BODY && getHeaderLine(input) == END)
 				break; // in case of error or not full header line
 			if (state == PARSE_START_LINE && parseStartLine() == SUCCESS)
@@ -161,19 +169,29 @@ class HttpParser {
 		input.erase(0, crlf_pos + 2);
 //		verbose && std::cout << "input after erace: "CYAN << input << RESET << std::endl;
 		if (buffer.empty()) {
+			//std::cout << BLUE;
+			//display(std::cout);
+			//std::cout << RESET << '\n';
 			setState(PARSE_BODY);
 			validateHeaders();
 		}
 		return SUCCESS;
 	}
 
+	std::string::size_type find_whitespace(std::string & str) {
+		std::string::size_type pos = str.find(' ');
+		if ( pos != std::string::npos )
+			return pos;
+		return str.find('\t');
+		//return pos;
+	}
 	/// im keeping that wired interface for future corrections and cause i like that : )
 	int parseStartLine() {
 		verbose && std::cout << "start line.. "  << std::endl;
 		///	request-line   = method SP request-target SP HTTP-version // CRLF
-		size_t pos = buffer.find(' ');
+		size_t pos = find_whitespace(buffer);
 		if ( pos == std::string::npos )
-			return setCode(HttpStatus::BadRequest, "method not exist");
+			return setCode(HttpStatus::BadRequest, "whitespace");
 		method = buffer.substr(0, pos);
 
 		if (!validateMethodExists())
@@ -182,7 +200,7 @@ class HttpParser {
 			return setCode(HttpStatus::NotImplemented, "not implemented"); // TODO
 		buffer.erase(0, pos + 1);
 
-		pos = buffer.find(' ');
+		pos = find_whitespace(buffer);
 		if ( pos == std::string::npos )
 			return setCode(HttpStatus::BadRequest, "method not exist");
 		target = buffer.substr(0, pos);
@@ -217,17 +235,26 @@ class HttpParser {
 		//verbose && std::cout << "parsing header line.. "  << std::endl;
 		size_t pos = buffer.find(':');
 		if (::isspace(buffer[0])) {
-			setCode(HttpStatus::BadRequest, "space on top");
+			setCode(HttpStatus::BadRequest, "Space before key in header");
 			return ERROR;
 		}
 		if (pos == std::string::npos) {
-			setCode(HttpStatus::BadRequest, "no colon");
+			setCode(HttpStatus::BadRequest, "A sender MUST NOT generate a message that includes line folding");
 			return ERROR;
 		}
-		std::string key = (buffer.substr(0, pos));
+		std::string key = buffer.substr(0, pos);
+		//std::cout << ">>>>>> '" << key << "'" << std::endl;
+		if ( find_whitespace(key) != std::string::npos ) {
+			setCode(HttpStatus::BadRequest, "No whitespace is allowed between the header field-name and colon");
+			return ERROR;
+		}
 		to_lower(key);
 		buffer.erase(0, pos + 1);
 		trim(buffer);
+		if ( unpack_dequtes(buffer) == EXIT_FAILURE ) {
+			setCode(HttpStatus::BadRequest, "Bad field or dquote");
+			return ERROR;
+		}
 		headers.insert(headersPair(key, buffer));
 		return SUCCESS;
 	}
@@ -237,7 +264,11 @@ class HttpParser {
 		headerItor cl = headers.find("content-length");
 
 		if (te != headers.end() && cl != headers.end()) {
-			setCode(HttpStatus::BadRequest);
+			setCode(HttpStatus::BadRequest, "both content-length and encoding headers");
+			return ;
+		}
+		if ( headers.find("host") == headers.end() ) {
+			setCode(HttpStatus::BadRequest, "host header is missing");
 			return ;
 		}
 		if (cl != headers.end()) {
@@ -247,20 +278,88 @@ class HttpParser {
 			isDigits(val) || setCode(HttpStatus::BadRequest);
 			length = ::strtol(cl->second.c_str(), NULL, 10);
 		}
-		if (te != headers.end()) {
-			setCode(HttpStatus::NotImplemented);
+		if (te != headers.end() ) { 
+			if ( te->second != "chunked" )
+				setCode(HttpStatus::NotImplemented);
+			else 
+				transfer_encoding = "chunked"; 
+		} else 
+			length == 0 && setState(DONE); // TODO
+	}
+	int find_chunk_size( std::string & input ) {
+		//if ( chunk_size == 0 ) {
+		std::string::size_type pos = input.find(CRLF);
+		if (pos == std::string::npos) {
+			log(YELLOW"chunk size not complete yet"RESET);
+			return SUCCESS;
 		}
-		length == 0 && setState(DONE);
+		std::string chunk_head = input.substr(0, pos);  // "content-lenght 40 CRLF
+		input.erase(0, pos + 2);
+		pos = chunk_head.find(';');
+		if (pos != std::string::npos) {
+			log(BLUE"chunk extension found"RESET);
+			std::string extensions(chunk_head.substr(pos + 1, chunk_head.size() - pos - 1));
+			chunk_head = chunk_head.substr(0, pos);
+		}
+		if ( !validate_hex(chunk_head) ) {
+			log(RED"hex size incorrect"RESET);
+			return ERROR;
+		}
+		chunk_size = hextoi(chunk_head);
+		log("size parsing..");
+		chunk_size_parsed = true;
+		return SUCCESS;
+		//}
+	}
+	// chunk          = chunk-size [ chunk-ext ] CRLF
+    //                  chunk-data CRLF
+    // chunk-size     = 1*HEXDIG
+    // last-chunk     = 1*("0") [ chunk-ext ] CRLF
+	// chunk-ext      = *( ";" chunk-ext-name [ "=" chunk-ext-val ] )
+    // chunk-ext-name = token
+    // chunk-ext-val  = token / quoted-string
+	int parse_chunked( std::string & input ) {
+		log("parsing chunked. size found=", chunk_size_parsed);
+		if ( !chunk_size_parsed && find_chunk_size(input) == ERROR ) {
+			log(RED"chunked size error"RESET);
+			return ERROR;
+		}
+		log("chunked size=", chunk_size);
+		if ( chunk_size == 0 )  // TODO if it can be 0
+			return END;
+		if ( input.size() >= chunk_size + 2 ) {
+			std::string::size_type pos = input.find(CRLF, chunk_size);
+			if ( pos != chunk_size ) {
+				log(RED"chunked CRLF error, pos=", pos, RESET);
+				return ERROR;
+			}
+			buffer.append(input.begin(), input.begin() + pos);
+			input.erase(0, pos + 2);
+			chunk_size_parsed = false;
+		} else {
+			buffer.append(input);
+			chunk_size -= input.size();
+		}
+		return SUCCESS;
 	}
 
 	int parseBody(std::string & input) {
-		verbose && std::cout << "body consuming..." << std::endl;
-		if ( buffer.size() + input.size() >= length ) {
-			buffer.append(input.substr(0, length - buffer.size()));
-			setState(DONE);
+		verbose && std::cout << "body consuming, input size=" << input.size() << " data: "CYAN << input << RESET << std::endl;
+		if ( !transfer_encoding.size() ) {
+			if ( buffer.size() + input.size() >= length ) {
+				buffer.append( input.substr(0, length - buffer.size()) );
+				setState(DONE);
+				// should be error not  correct data? 
+			} else {
+				buffer.append(input);
+			}
+		} else {
+			int ret = parse_chunked(input);
+			if ( ret == END )
+				setState(DONE);
+			else if ( ret == ERROR ) 
+				setCode( HttpStatus::BadRequest, "err" );
 		}
-		else 
-			buffer.append(input);
 		input.clear();
 		return 0;
 	}
@@ -279,7 +378,8 @@ class HttpParser {
 		for (headerItor it = headers.begin(); it != headers.end(); it++) {
 			o << "\t\t" << it->first << ": " << it->second << std::endl;
 		}
-		o << "buffer:" << buffer << std::endl;
+		o << "\tcounter:" << counter << std::endl;
+		o << "\tbuffer:" << buffer << std::endl;
 		o << RESET << std::endl;
 	}
 };

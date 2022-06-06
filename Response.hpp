@@ -111,7 +111,7 @@ class HttpResponse : public HttpParser {
 		if ( body_size ) 
 			response += "Content-Length: " + itoa(body_size) +"\r\n";
 		response += "Content-Type: text/html\r\n";
-		response += "Connection: close\r\n";
+		//response += "Connection: close\r\n";
 		response += "Server: tonypony web server\r\n";
 		response += "\r\n";
 	}
@@ -125,17 +125,16 @@ class HttpResponse : public HttpParser {
 			"<body>\n"
 			"<center><h1>" + get_response_status() + "</h1></center>\n"
 			"<hr><center>web server</center>\n"
+			"<hr><center>" + debug_info + "</center>\n"
 			"</body>\n" 
 			"</html>\n";
 		} else {
 			response_body = "Hello World! My payload includes a trailing\r\n";
 		}
-
-		
 	}
 
 	void make_response() {
-		if (search_file() == EXIT_FAILURE) // TODO different files type 
+		if (!code && method == "GET" && search_file() == EXIT_FAILURE) // TODO different files type 
 			setCode(HttpStatus::NotFound, "file not found");
 		make_response_body();
 		add_status_line();

@@ -83,11 +83,13 @@ int loop (Server & serv) {
 		for (int i = 0; i < io_sessions.size(); i++) {
 			if ( ! (fds[i].revents & ( POLLIN | POLLOUT ) ) )// == 0 ??
 				continue;
-			log("\tprocessing fd=", fds[i].fd);
+			//log("\tprocessing fd=", fds[i].fd);
+			//log("\tprocessing fd=", fds[i].fd);
+			io_sessions[i]->counter++;
 			//std::cout << i << std::endl;
 			/// fds[i].revents != events => Error
 			/// this is expected if (fds[i].revents & POLLIN)
-			if (io_sessions[i]->getFd() == LISTENING_SESSION) {
+			if (io_sessions[i]->getFd() == LISTENING_SESSION && ( fds[i].revents & POLLIN )) {
 				poll_fd.fd = accept(fds[i].fd, NULL, NULL);
 				if (poll_fd.fd < 0 && errno != EWOULDBLOCK) {
 					perror("accept error: ");
