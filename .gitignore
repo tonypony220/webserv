@@ -1,3 +1,6 @@
 *.out
 m.cpp
 tags
+file.cpp
+cmake-build-debug
+file*

@@ -1,12 +1,12 @@
 #pragma once
 #include <unistd.h>
+#include <fstream>
 #include "Request.hpp"
-//#include "tcpSession.hpp"
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <unistd.h>
 #include <dirent.h>
-
+#include <sys/stat.h> // chmod
 #define IN 0
 #define OUT 1
 
@@ -129,13 +129,30 @@ class HttpResponse : public HttpParser {
 			"</body>\n" 
 			"</html>\n";
 		} else {
-			response_body = "Hello World! My payload includes a trailing\r\n";
+			//response_body = "Hello World! My payload includes a trailing\r\n";
 		}
+	}
+	int write_to_file(std::string & filename, std::string & data) {
+		filename.erase(0, 1);
+		chmod(filename.c_str(), S_IRUSR | S_IWUSR);
+		std::ofstream out( filename );
+		if (!out) {
+			log(RED"file error: ", strerror(errno),RESET);
+			return ERROR;
+		}
+		out << data;
+		out.close();
+		log(GREEN"file saved", RESET);
+		return SUCCESS;
 	}
 
 	void make_response() {
 		if (!code && method == "GET" && search_file() == EXIT_FAILURE) // TODO different files type 
 			setCode(HttpStatus::NotFound, "file not found");
+		if (!code && (method == "POST" || method == "PUT")) {
+			if (write_to_file(target, buffer) == SUCCESS )
+				setCode(HttpStatus::NoContent);
+		}
 		make_response_body();
 		add_status_line();
 		add_headers();

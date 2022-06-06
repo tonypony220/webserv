@@ -41,7 +41,7 @@ else {
 } | tee /dev/tty | telnet #localhost 8080
 
 fi
-# curl -H "Transfer-Encoding: chunked" -d @t.cpp localhost:2001
-# curl -F "data=@t.cpp" localhost:2001
+# 		curl -H "Transfer-Encoding: chunked" -d @t.cpp localhost:2001
+# 		curl -F "data=@t.cpp" localhost:2001
 # this use PUT: 
 # 		curl -T t.cpp localhost:2001

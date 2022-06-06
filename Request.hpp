@@ -318,6 +318,7 @@ class HttpParser {
 	// chunk-ext      = *( ";" chunk-ext-name [ "=" chunk-ext-val ] )
     // chunk-ext-name = token
     // chunk-ext-val  = token / quoted-string
+	// TODO trailer part
 	int parse_chunked( std::string & input ) {
 		log("parsing chunked. size found=", chunk_size_parsed);
 		if ( !chunk_size_parsed && find_chunk_size(input) == ERROR ) {
@@ -325,8 +326,8 @@ class HttpParser {
 			return ERROR;
 		}
 		log("chunked size=", chunk_size);
-		if ( chunk_size == 0 )  // TODO if it can be 0
-			return END;
+		if ( chunk_size == 0 ) 
+			return END;  // for now we ignore trailer part
 		if ( input.size() >= chunk_size + 2 ) {
 			std::string::size_type pos = input.find(CRLF, chunk_size);
 			if ( pos != chunk_size ) {
