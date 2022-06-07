@@ -7,6 +7,7 @@
 #include <vector>
 #include "Utils.hpp"
 #include <netinet/in.h>
+#include <fcntl.h>
 #define LISTEN_QLEN 32
 
 // member vector of objects same class
@@ -41,6 +42,7 @@ class SocketTCP {
 				buff = std::string("socket error: ") + std::string(std::strerror(errno));
 				return -1;
 			}
+			fcntl(fd, F_SETFL, O_NONBLOCK);
 			int opt = 1;
 			/* Allow socket descriptor to be reuseable                   */
 			rc = setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt));
@@ -53,7 +55,7 @@ class SocketTCP {
 
 		    /* Bind the socket                                           */
 			struct sockaddr_in addr;
-			memset(&addr, 0, sizeof(addr));
+			memset(&addr, 0, sizeof(addr)),
 			addr.sin_family = AF_INET;
 			addr.sin_addr.s_addr = htonl(INADDR_ANY);
 			addr.sin_port = htons(port);

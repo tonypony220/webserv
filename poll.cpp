@@ -36,13 +36,14 @@ int accept_connections(int listen_fd,
 //	{
 //		std::cout << "adress of sssions: " << &sessions << std::endl;
 		poll_fd.fd = accept(listen_fd, NULL, NULL);
+		fcntl(poll_fd.fd, F_SETFL, O_NONBLOCK);
 		if (poll_fd.fd < 0 && errno != EWOULDBLOCK) {
-			perror("accept error: ");
+			log(RED"accept error: ", strerror(errno), RESET);
 		} else {
 			//poll_fd.fd = new_socket_fd;
 			poll_fd.events = POLLIN;
 			fds.push_back(poll_fd);
-			log("accepted new connection", poll_fd.fd);
+			log(GREEN"accepted new connection fd=", poll_fd.fd, RESET);
 			sessions.push_back(sptr<IOInterface>( new tcpSession(poll_fd.fd, &serv)));
 		}
 //		std::cout << "HERE2" << std::endl;
@@ -104,6 +105,7 @@ int loop (Server & serv) {
 				continue;
 			}
 			int ret = io_sessions[i]->processEvent(fds[i].revents);
+//			log(BLUE"process event=", ret, RESET);
 			if ( ret == HANDLE_CGI ) {
 				log("cgi creating...", poll_fd.fd);
 				CgiPipe * cgi = io_sessions[i]->get_cgi_pipe();
@@ -117,6 +119,7 @@ int loop (Server & serv) {
 				log("cgi failed", poll_fd.fd);
 			}
 			else if (ret != SUCCESS) {
+				log(BLUE"closing connection fd=", poll_fd.fd, RESET);
 //				close_connection(sessions, fds);
 				close(fds[i].fd);
 				// https://stackoverflow.com/questions/9927163/erase-element-in-vector-while-iterating-the-same-vector
@@ -136,7 +139,7 @@ int main() {
 	std::vector<int> ports; 
 	ports.push_back(2002);
 	ports.push_back(2001);
-	Server serv(ports, "~/coding/webserv");
+	Server serv(ports, "/Users/mehtel/coding/webserv");
 	/* sockets.push_back(SocketTCP(2002)); */
 	/* sockets.push_back(SocketTCP(2001)); */
 

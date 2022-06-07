@@ -33,7 +33,7 @@ public:
 
 class CgiPipe : public IOInterface {
 public:
-	std::string		buffer;
+//	std::string		buffer;
 	HttpResponse *	response_ptr;
 	/* int fd_in; */
 	/* int fd_out; */
@@ -67,13 +67,17 @@ public:
 		char buff[BUFF_SIZE];
 		memset(buff, 0, BUFF_SIZE);
 		int rc = read(fd, buff, BUFF_SIZE - 1);
-		if (rc == 0) 
+		if (rc == 0) {
+			response_ptr->state = STATE_DONE;
 			return END;
+		}
 		if (rc < 0) {
-			std::cerr << "read error: " << strerror(errno);
+			log(RED"read pipe error: " , strerror(errno), RESET);
+			response_ptr->state = STATE_ERROR;
 			return ERROR;
 		}
-		buffer.append( buff );
+		response_ptr->response_body.append( buff );
+//		buffer.append( buff );
 	}
 
 //	int  		  writePipe() {
@@ -141,60 +145,60 @@ class tcpSession : public IOInterface {
 		int ret;
 		if (event & POLLIN) {
 			ret = readSocket();
-			log("\tsession reading...fd= ", fd);
+//			log("\tsession reading...fd= ", fd, "read=", ret);
 			if (ret == ERROR)
 				return ERROR;
 		}
-		if ( !responses.empty() ) { 
-			responses[current_response].make_response();
-			if ( responses[current_response].is_cgi() )
+//		log("\tresponses=", responses.size());
+		if ( !responses.empty() ) {
+//			responses[current_response].();
+			if (responses[current_response].is_cgi())
 				return HANDLE_CGI;
-		//	log("event POLLUT");
-			if ( responses[current_response].ready() && (event & POLLOUT) ) { // TCP buffer have space to write to
+			if (responses[current_response].ready_to_write()) {// && (event & POLLOUT) ) { // TCP buffer have space to write to
 				log("\tsession writing...", fd);
 				ret = writeSocket();
-				if ( ret == END && responses[current_response].sent() ) // TODO next response
-					return END;
+				if (ret == ERROR)
+					return ERROR;
+//				if (ret == END && responses[current_response].completed()) // TODO next response
+//					return END;
 			}
+			if ( responses[current_response].completed() )
+				return END;
 		}
 		return SUCCESS;
 	}
-//			std::string buff = request.getBuffer();
-//				replace(buff, "\n", "LF\n");
-//				replace(buff, "\r", "CR\r");
-
-//			replace(buff, "\r\n", " CRLF ");
-//			std::cout << "bukfer: " << buff << "$" << std::endl;
-
-//				if (rc == DONE)
-//					std::cout << "buffer: " << request.getBuffer() << "$" << std::endl;
-//			return rc;
-
-	int  		  writeSocket() { 
+	int  		  writeSocket() {
 		//TODO maybe not sent all response for once cause
 		// e
-		std::string buff = responses[current_response].get_response();
-		log("write to socket:", PURPLE, buff, RESET); //fd &&
+		std::string & buff = responses[current_response].get_buffer();
 		int 		rc = ::write(fd, buff.c_str(), buff.size());
+//		log("write to socket:", PURPLE, buff, RESET); //fd &&
 		if (rc < 0) {
-			std::cerr << RED"write error: "RESET << strerror(errno);
+//			std::cerr << RED"write error: "RESET << strerror(errno);
+			log(RED"write error: ", strerror(errno), RESET);
 			return ERROR;
 		} //if (rc == 0) { ????????????
-		buffer.erase(0, rc);
+		if (rc == 0) {
+//			std::cerr << RED"write error: "RESET << strerror(errno);
+			log(RED"idle write: ", RESET);
+			return SUCCESS;
+		} //if (rc == 0) { ????????????
+		buff.erase(0, rc);
+		if ( buff.empty() )
+			return END;
 		//responses[current_response].
-		return END;
+		return SUCCESS;
 	}
-
 	int 		   readSocket() {
 		char buff[BUFF_SIZE];
 		memset(buff, 0, BUFF_SIZE);
 		int rc = read(fd, buff, BUFF_SIZE - 1);
 		if (rc == 0) {
-			std::cerr << RED"closed"RESET;
-			return ERROR; //TODO should return  END
+			//std::cerr << RED"closed"RESET;
+			return END; //TODO should return  END
 		}
 		if (rc < 0) {
-			std::cerr << RED"read error: "RESET << strerror(errno);
+			log(RED"read socket error: ",strerror(errno),RESET);
 			return ERROR;
 		}
 		buffer.append( buff );

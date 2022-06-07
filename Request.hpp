@@ -110,6 +110,8 @@ class HttpParser {
 
 	int setCode(int val, std::string const & why="") {
 		// setting response code
+		log(BLUE"resp code set: ", code, RESET);
+		log(BLUE"reason: ", why, RESET);
 		setState(DONE);
 		if (!why.empty())
 			setReason(why);
@@ -128,7 +130,7 @@ class HttpParser {
 	int parseInput(std::string & input) {
 		counter++;
 		//verbose && std::cout << "parsing.." << std::endl;
-		verbose && std::cout << "parsing input buffer: "BLUE << input << RESET << std::endl;
+//		verbose && std::cout << "parsing input buffer: \n"BLUE << input << RESET << std::endl;
 		while ( !input.empty() && !isComplete() ) {
 			//verbose && std::cout << "input buffer: " << input << std::endl;
 			//buffer.clear();	
@@ -287,7 +289,6 @@ class HttpParser {
 			length == 0 && setState(DONE); // TODO
 	}
 	int find_chunk_size( std::string & input ) {
-		//if ( chunk_size == 0 ) {
 		std::string::size_type pos = input.find(CRLF);
 		if (pos == std::string::npos) {
 			log(YELLOW"chunk size not complete yet"RESET);
@@ -329,6 +330,7 @@ class HttpParser {
 		if ( chunk_size == 0 ) 
 			return END;  // for now we ignore trailer part
 		if ( input.size() >= chunk_size + 2 ) {
+			log("getting full chunk");
 			std::string::size_type pos = input.find(CRLF, chunk_size);
 			if ( pos != chunk_size ) {
 				log(RED"chunked CRLF error, pos=", pos, RESET);
@@ -336,8 +338,10 @@ class HttpParser {
 			}
 			buffer.append(input.begin(), input.begin() + pos);
 			input.erase(0, pos + 2);
+//			log("request buffer: ", buffer);
 			chunk_size_parsed = false;
 		} else {
+			log("getting part chunk");
 			buffer.append(input);
 			chunk_size -= input.size();
 		}
@@ -345,7 +349,9 @@ class HttpParser {
 	}
 
 	int parseBody(std::string & input) {
-		verbose && std::cout << "body consuming, input size=" << input.size() << " data: "CYAN << input << RESET << std::endl;
+		verbose && std::cout << "body consuming, input buffer size=" << input.size()
+		<< " data: "CYAN << input << RESET << std::endl;
+
 		if ( !transfer_encoding.size() ) {
 			if ( buffer.size() + input.size() >= length ) {
 				buffer.append( input.substr(0, length - buffer.size()) );
@@ -354,6 +360,7 @@ class HttpParser {
 			} else {
 				buffer.append(input);
 			}
+			input.clear();
 		} else {
 			int ret = parse_chunked(input);
 			if ( ret == END )
@@ -361,7 +368,6 @@ class HttpParser {
 			else if ( ret == ERROR ) 
 				setCode( HttpStatus::BadRequest, "err" );
 		}
-		input.clear();
 		return 0;
 	}
 
