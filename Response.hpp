@@ -14,13 +14,14 @@
 #define CGI  4
 #define GENERIC 8
 #define HTML 16
+#define UPLOAD 32
 
 //#define STATE_DISCOVERED  //1
-#define STATE_NONE  0  //2
-#define STATE_WAIT  1  //2
-#define STATE_DONE  2  //3
-#define STATE_READY 3  //4
-#define STATE_ERROR 4  //4
+#define STATE_NONE  10  //2
+#define STATE_WAIT  11  //2
+#define STATE_DONE  12  //3
+#define STATE_READY 13  //4
+#define STATE_ERROR 14  //4
 
 #define CGI_STATE_INIT 	 1
 #define CGI_STATE_CALLED 2
@@ -53,11 +54,15 @@ class HttpResponse : public HttpParser {
 	std::string		file_type; // * file type for CGI
 	int 			fd;	// * for reading file only
 	int				type;
-	int				state;
+	unsigned int	resp_state;
 
-	std::string & get_buffer() {
+	std::string & get_response_buffer() {
 		return response_buffer;
 	}
+	std::string & get_response_body() {
+		return response_body;
+	}
+	unsigned int & get_resp_state() { return resp_state; }
 
 	int read_from_file() {
 		char buff[BUFF_SIZE];
@@ -81,51 +86,57 @@ class HttpResponse : public HttpParser {
 		response_body.clear();
 	}
 	int ready_to_write() {
-//		log("state=", state);
-		if ( state == STATE_READY )
+		if ( resp_state == STATE_READY ) {
+			log(BLUE"response state READY "RESET, resp_state);
 			return 1;
+		}
 		if (!code)
 			setCode(HttpStatus::OK);
 		if ( code > 300 ) {
+			log(BLUE"response error READY "RESET, resp_state);
 			generate_response_body();
 			fill_buffer_to_send();
-			state = STATE_READY;
+			resp_state = STATE_READY;
 			return 1;
 		}
-		if ( type & CGI ) {
-			if ( state < STATE_DONE )
+		if ( type & (CGI | UPLOAD) ) {
+			log(BLUE"response CGI | UPLOAD "RESET, resp_state);
+			if ( resp_state < STATE_DONE )
 				return 0;
-			if ( state == STATE_DONE ) {
+			if ( resp_state == STATE_DONE ) {
 				fill_buffer_to_send();
-				state = STATE_READY;
+				resp_state = STATE_READY;
 			}
 			return 1;
 		}
 		if ( type & FILE ) {
+			log(BLUE"response FILE "RESET, resp_state);
 //			if ( !response.empty() )
-			if ( state < STATE_WAIT ) {
+			if ( resp_state < STATE_WAIT ) {
 				fill_buffer_to_send();
-				state = STATE_WAIT;
+				resp_state = STATE_WAIT;
 			}
 			if ( fd > 0 && read_from_file() != SUCCESS ) {
 				log(BLUE"file reading is done"RESET);
 				close(fd);
 				fd = -1;
-				state = STATE_READY;
+				resp_state = STATE_READY;
 			}
 			return response_buffer.size();
 		}
 		if ( !response_body.empty() ) {
+			log(BLUE"response empty READY "RESET, resp_state);
 			fill_buffer_to_send();
-			state = STATE_READY;
+			resp_state = STATE_READY;
 		}
+		log(BLUE"response SIZE "RESET, resp_state);
 		return response_buffer.size();
 	}
 
 	bool completed() const {
 //		log("buffer: ", buffer.size());
 //		log("state=", state);
-		return state >= STATE_READY && response_buffer.empty();
+		return resp_state >= STATE_READY && response_buffer.empty();
 //		if ( cgi_state >= CGI_STATE_DONE )
 //			return true;
 //		if ( file_state ) {
@@ -242,18 +253,26 @@ class HttpResponse : public HttpParser {
 	void get_path_from_target() {
 		target.erase(0, 1);
 	}
+	int create_file() {
+		fd = open(target.c_str(), O_WRONLY | O_NONBLOCK | O_CREAT, 0400);
+		if ( fd < 0 ) {
+			log(RED"file open error: ", strerror(errno),RESET);
+			setCode(HttpStatus::NotFound, "open failed");
+		}
+		return fd;
+	}
 
-	int write_to_file(std::string & data) {
+	int validate_path(std::string & data) {
 		get_path_from_target();
 		chmod(target.c_str(), S_IRUSR | S_IWUSR);
-		std::ofstream out( target );
-		if (!out) {
-			log(RED"file error: ", strerror(errno),RESET);
-			return ERROR;
-		}
-		out << data;
-		out.close();
-		log(GREEN"file saved", RESET);
+	//	std::ofstream out( target );
+	//	if (!out) {
+	//		log(RED"file error: ", strerror(errno),RESET);
+	//		return ERROR;
+	//	}
+	//	out << data;
+	//	out.close();
+	//	log(GREEN"file saved", RESET);
 		return SUCCESS;
 	}
 
@@ -264,27 +283,36 @@ class HttpResponse : public HttpParser {
 		fd = -1; // initialization
 		length = 0; // initialization
 		type = 0;
-		state = STATE_NONE;
+		resp_state = STATE_NONE;
 		if ( !code ) {
 			if ( (method == "GET" || method == "DELETE")  && search_file() == EXIT_FAILURE ) {
 				setCode(HttpStatus::NotFound, "file not found");
 			} else if ( method == "GET" && type == CGI ) {
 
-			} else if ( method == "GET" && ( type & FILE )) {
+			}
+			else if ( method == "GET" && ( type & FILE ))
+			{
 				get_path_from_target();
 				fd = open(target.c_str(), O_RDONLY | O_NONBLOCK);
 				if ( fd < 0 ) {
 					log(RED"file open error: ", strerror(errno),RESET);
 					setCode(HttpStatus::InternalServerError, "open failed");
 				}
-			} else if ( method == "DELETE" ) { // TODO
+			}
+			else if ( method == "DELETE" ) { // TODO
 				// unlink
-			} else if (method == "POST" || method == "PUT") { // TODO
-				if (write_to_file(buffer) == SUCCESS)
+			}
+			else if (method == "POST" || method == "PUT")
+			{ // TODO
+				type |= UPLOAD;
+				if (validate_path(buffer) == SUCCESS) {
 					setCode(HttpStatus::NoContent);
-				fill_buffer_to_send();
-				state = STATE_READY;
-			} else {
+				}
+//				fill_buffer_to_send();
+//				state = STATE_READY;
+			}
+			else
+			{
 				setCode(HttpStatus::InternalServerError, "what?");
 			}
 		}
@@ -298,7 +326,7 @@ class HttpResponse : public HttpParser {
 		//response = "HTTP/1.1 200 OK\r\n"
      	//		   "Date: Mon, 27 Jul 2009 12:28:53 GMT\r\nContent-Length: 45\r\n\r\nHello World! My payload includes a trailing\r\n";
 	}
-	int spawn_process(const char *const *args, const char * const *pEnv){
+	int spawn_process(const char *const *args, const char * const *pEnv) {
 		/* Create copy of current process */
 		int pid = fork();
 		/* The parent`s new pid will be 0 */
@@ -314,10 +342,12 @@ class HttpResponse : public HttpParser {
 	}
 
 	bool is_cgi() {
-		if ( (type & CGI) && state == STATE_NONE )	{
-			state = STATE_WAIT;
+		if ( (type & (CGI | UPLOAD)) && resp_state == STATE_NONE ) {
+			resp_state = STATE_WAIT;
+			log(BLUE"is cgi? true "RESET);
 			return true;
 		}
+		log(BLUE"is cgi? false"RESET);
 		return false;
 	}
 

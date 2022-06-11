@@ -6,6 +6,7 @@
 #include <vector>
 #include <unordered_map>
 #include <sys/socket.h>
+#include <arpa/inet.h>
 
 // pollfd orig structure
 //
@@ -25,31 +26,42 @@ int stop = 0;
 //	return 0;
 //}
 
-int accept_connections(int listen_fd,
-					   Server & serv,
-					   std::vector<sptr<IOInterface> > & sessions,
-					   std::vector<pollfd> & fds) {
-	struct pollfd 	poll_fd;
-	//int 			new_socket_fd = 0;
-
-//	while (new_socket_fd > -1)
-//	{
-//		std::cout << "adress of sssions: " << &sessions << std::endl;
-		poll_fd.fd = accept(listen_fd, NULL, NULL);
-		fcntl(poll_fd.fd, F_SETFL, O_NONBLOCK);
-		if (poll_fd.fd < 0 && errno != EWOULDBLOCK) {
-			log(RED"accept error: ", strerror(errno), RESET);
-		} else {
-			//poll_fd.fd = new_socket_fd;
-			poll_fd.events = POLLIN;
-			fds.push_back(poll_fd);
-			log(GREEN"accepted new connection fd=", poll_fd.fd, RESET);
-			sessions.push_back(sptr<IOInterface>( new tcpSession(poll_fd.fd, &serv)));
-		}
-//		std::cout << "HERE2" << std::endl;
-//	}
-	return 0;
-}
+//int accept_connections(int listen_fd,
+//					   Server & serv,
+//					   std::vector<sptr<IOInterface> > & sessions,
+//					   std::vector<pollfd> & fds) {
+//	struct pollfd 	poll_fd;
+//	//int 			new_socket_fd = 0;
+//
+////	while (new_socket_fd > -1)
+////	{
+////		std::cout << "adress of sssions: " << &sessions << std::endl;
+//
+//		struct sockaddr_in client_addr;
+//		poll_fd.fd = accept(listen_fd, (struct sockaddr*)&client_addr, NULL);
+//		struct in_addr ipAddr = client_addr.sin_addr;
+//		char str[INET_ADDRSTRLEN];
+//		inet_ntop( AF_INET, &ipAddr, str, INET_ADDRSTRLEN );
+//		log(&ipAddr);
+//		log( std::string(str));
+////	log(YELLOW"client ip="RESET, std::string(str));
+////		poll_fd.fd = accept(listen_fd, NULL, NULL);
+//		fcntl(poll_fd.fd, F_SETFL, O_NONBLOCK);
+//		if (poll_fd.fd < 0 && errno != EWOULDBLOCK) {
+//			log(RED"accept error: ", strerror(errno), RESET);
+//		} else {
+//			//poll_fd.fd = new_socket_fd;
+//			poll_fd.events = POLLIN;
+//			fds.push_back(poll_fd);
+////			std::cout << "client ip=" << '\n';
+////			log(GREEN"client ip="RESET);
+//			log(YELLOW"accepted new connection fd=", poll_fd.fd, RESET);
+//			sessions.push_back(sptr<IOInterface>( new tcpSession(poll_fd.fd, &serv)));
+//		}
+////		std::cout << "HERE2" << std::endl;
+////	}
+//	return 0;
+//}
 
 //std::vector<SocketTCP>  sockets;
 
@@ -91,12 +103,21 @@ int loop (Server & serv) {
 			/// fds[i].revents != events => Error
 			/// this is expected if (fds[i].revents & POLLIN)
 			if (io_sessions[i]->getFd() == LISTENING_SESSION && ( fds[i].revents & POLLIN )) {
-				poll_fd.fd = accept(fds[i].fd, NULL, NULL);
+//				poll_fd.fd = accept(fds[i].fd, NULL, NULL);
+				struct sockaddr_in client_addr;
+				socklen_t len = sizeof(client_addr);
+
+				poll_fd.fd = accept(fds[i].fd, (struct sockaddr*)&client_addr, &len);
+				struct in_addr ipAddr = client_addr.sin_addr;
+				char str[INET_ADDRSTRLEN];
+				inet_ntop( AF_INET, &ipAddr, str, INET_ADDRSTRLEN );
+
 				if (poll_fd.fd < 0 && errno != EWOULDBLOCK) {
 					perror("accept error: ");
 				} else {
 					//poll_fd.fd = new_socket_fd;
-					log("accepted new connection, fd: ", poll_fd.fd);
+					log(GREEN"accepted new connection, fd: ", poll_fd.fd, "ip: ", str);
+					log(RESET);
 					poll_fd.events = POLLIN | POLLOUT;
 					fds.push_back(poll_fd);
 					io_sessions.push_back(sptr<IOInterface>( new tcpSession(poll_fd.fd, &serv)));
@@ -107,17 +128,31 @@ int loop (Server & serv) {
 			int ret = io_sessions[i]->processEvent(fds[i].revents);
 //			log(BLUE"process event=", ret, RESET);
 			if ( ret == HANDLE_CGI ) {
-				log("cgi creating...", poll_fd.fd);
-				CgiPipe * cgi = io_sessions[i]->get_cgi_pipe();
+				log(BLUE"cgi session creating..."RESET, poll_fd.fd);
+				//CgiPipe * cgi = io_sessions[i]->get_cgi_pipe();
+				IOInterface * cgi = io_sessions[i]->get_interface();
 				if (cgi) {
 					poll_fd.events = POLLIN;
 					poll_fd.fd = cgi->getFd();
 					fds.push_back(poll_fd);
 					io_sessions.push_back(sptr<IOInterface>( cgi ));
-					log("cgi created", poll_fd.fd);
+					log(BLUE"cgi created", poll_fd.fd);
 				} // TODO handle error
-				log("cgi failed", poll_fd.fd);
+				else
+					log(RED"cgi failed"RESET, poll_fd.fd);
 			}
+//			else if ( ret == HANDLE_FILE ) {
+//				log("file session creating...", poll_fd.fd);
+//				File * cgi = io_sessions[i]->get_cgi_pipe();
+//				if (cgi) {
+//					poll_fd.events = POLLIN;
+//					poll_fd.fd = cgi->getFd();
+//					fds.push_back(poll_fd);
+//					io_sessions.push_back(sptr<IOInterface>( cgi ));
+//					log("cgi created", poll_fd.fd);
+//				} // TODO handle error
+//				log("cgi failed", poll_fd.fd);
+//			}
 			else if (ret != SUCCESS) {
 				log(BLUE"closing connection fd=", poll_fd.fd, RESET);
 //				close_connection(sessions, fds);

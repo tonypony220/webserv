@@ -13,7 +13,9 @@
 #define HEADER 	  		 2
 #define PARSE_BODY		 3
 #define DONE 	  		 4
-#define HANDLE_CGI		 2
+
+#define HANDLE_CGI		 10
+#define HANDLE_FILE 	 11
 
 #define ERROR 	  		-1
 #define SUCCESS 		 0
@@ -96,8 +98,9 @@ class HttpParser {
 ///			response = other.getResponse();
 ///			return *this;
 ///		}
-	std::string getBuffer() { return buffer; }
+	std::string & get_request_buffer() { return buffer; }
 	std::map<std::string, std::string> & getHeaders() { return headers; }
+	unsigned int & getState() { return state; }
 
 	bool isComplete() const { return state > PARSE_BODY; }
 	unsigned int getCode() { return code; }

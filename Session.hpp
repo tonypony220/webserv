@@ -26,7 +26,7 @@ public:
 	int 		 	getFd( void ) const { return fd; }
 	Server * 		getServ( void ) const { return server_ptr; }
 	virtual int		processEvent( short event ) {};
-	virtual CgiPipe * get_cgi_pipe() { return NULL; }
+	virtual IOInterface * get_interface() { return NULL; }
 
 	Server *				  server_ptr;
 };
@@ -68,15 +68,15 @@ public:
 		memset(buff, 0, BUFF_SIZE);
 		int rc = read(fd, buff, BUFF_SIZE - 1);
 		if (rc == 0) {
-			response_ptr->state = STATE_DONE;
+			response_ptr->get_resp_state() = STATE_DONE;
 			return END;
 		}
 		if (rc < 0) {
 			log(RED"read pipe error: " , strerror(errno), RESET);
-			response_ptr->state = STATE_ERROR;
+			response_ptr->get_resp_state() = STATE_ERROR;
 			return ERROR;
 		}
-		response_ptr->response_body.append( buff );
+		response_ptr->get_response_body().append( buff );
 //		buffer.append( buff );
 	}
 
@@ -91,6 +91,33 @@ public:
 //		buffer.erase(0, rc);
 //		return SUCCESS;
 //	}
+};
+
+class File : public IOInterface {
+public:
+	HttpResponse *	response_ptr;
+
+	File(int fd, HttpResponse * resp)
+		: IOInterface(fd, NULL), response_ptr(resp) {} // NULL stub
+
+	virtual int		processEvent( short event ) {
+		int ret;
+
+		std::string & buff = response_ptr->get_request_buffer();
+		int 		rc = ::write(fd, buff.c_str(), buff.size());
+		log("write to file ", fd, BLUE"bytes="RESET, rc); //fd &&
+		if (rc < 0) {
+			log(RED"write error: ", strerror(errno), RESET);
+			return ERROR;
+		}
+		if (rc == 0) {
+			response_ptr->get_resp_state() = STATE_DONE;
+			return END;
+		}
+
+		buff.erase(0, rc);
+		return SUCCESS;
+	}
 };
 
 class tcpSession : public IOInterface {
@@ -134,11 +161,21 @@ class tcpSession : public IOInterface {
 	void 		 add_request() {
 		requests.push_back(HttpParser(server_ptr));
 	}
-	CgiPipe * 	 get_cgi_pipe() { 
-		int fd = responses[current_response].cgi(); 
-		if (fd == ERROR)
-			return NULL;
-		return new CgiPipe(fd, &responses[current_response]);
+
+	IOInterface * get_interface() {
+//	CgiPipe * 	 get_cgi_pipe() {
+		if ( responses[current_response].get_resp_state() & CGI ) {
+			int fd = responses[current_response].cgi();
+			if (fd == ERROR)
+				return NULL;
+			return new CgiPipe(fd, &responses[current_response]);
+		} else {
+			int fd = responses[current_response].create_file();
+			if (fd == ERROR)
+				return NULL;
+			return new File(fd, &responses[current_response]);
+		}
+
 	}
 
 	int 		 processEvent( short event ) {
@@ -152,8 +189,10 @@ class tcpSession : public IOInterface {
 //		log("\tresponses=", responses.size());
 		if ( !responses.empty() ) {
 //			responses[current_response].();
-			if (responses[current_response].is_cgi())
+			if (responses[current_response].is_cgi()) {
+				log(BLUE"session start create additional Interface..."RESET, fd);
 				return HANDLE_CGI;
+			}
 			if (responses[current_response].ready_to_write()) {// && (event & POLLOUT) ) { // TCP buffer have space to write to
 				log("\tsession writing...", fd);
 				ret = writeSocket();
@@ -170,7 +209,7 @@ class tcpSession : public IOInterface {
 	int  		  writeSocket() {
 		//TODO maybe not sent all response for once cause
 		// e
-		std::string & buff = responses[current_response].get_buffer();
+		std::string & buff = responses[current_response].get_response_buffer();
 		int 		rc = ::write(fd, buff.c_str(), buff.size());
 //		log("write to socket:", PURPLE, buff, RESET); //fd &&
 		if (rc < 0) {
