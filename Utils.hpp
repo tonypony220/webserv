@@ -23,10 +23,13 @@ template <class T, class T2>
 void log(const T & t, const T2 & t2) { std::cout << t  << t2 << std::endl; }
 
 template <class T, class T2, class T3> 
-void log(const T & t, const T2 & t2, const T3 & t3) { std::cout << t << ' ' << t2 <<' ' << t3 << std::endl; }
+void log(const T & t, const T2 & t2, const T3 & t3) {
+	std::cout << t << ' ' << t2 <<' ' << t3 << std::endl;
+}
 
 template <class T, class T2, class T3, class T4> 
 void log(const T & t, const T2 & t2, const T3 & t3, const T4 & t4) { std::cout << t << ' ' << t2 <<' ' << t3 << ' ' << t4 << std::endl; }
+
 
 bool validate_hex( std::string & number ) {
 	for ( int i = 0; i < number.size(); i++ ) {

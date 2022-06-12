@@ -103,8 +103,9 @@ public:
 	virtual int		processEvent( short event ) {
 		int ret;
 
-		std::string & buff = response_ptr->get_request_buffer();
-		int 		rc = ::write(fd, buff.c_str(), buff.size());
+		std::vector<BYTE> & buff = response_ptr->get_request_buffer();
+//		int 		rc = ::write(fd, buff.c_str(), buff.size());
+		int 		rc = ::write(fd, &buff[0], buff.size());
 		log("write to file ", fd, BLUE"bytes="RESET, rc); //fd &&
 		if (rc < 0) {
 			log(RED"write error: ", strerror(errno), RESET);
@@ -115,7 +116,8 @@ public:
 			return END;
 		}
 
-		buff.erase(0, rc);
+		buff.erase(buff.begin(), buff.begin() + rc);
+//		buff.erase(0, rc);
 		return SUCCESS;
 	}
 };
@@ -127,7 +129,8 @@ class tcpSession : public IOInterface {
 	std::vector<HttpResponse> responses;
 	unsigned int 			  current_request;
 	unsigned int 			  current_response;
-	std::string 			  buffer;
+//	std::string 			  buffer;
+	std::vector<char> 		  buffer;
 
   public:
 
@@ -179,10 +182,9 @@ class tcpSession : public IOInterface {
 	}
 
 	int 		 processEvent( short event ) {
-		int ret;
+		int ret = 0;
 		if (event & POLLIN) {
 			ret = readSocket();
-//			log("\tsession reading...fd= ", fd, "read=", ret);
 			if (ret == ERROR)
 				return ERROR;
 		}
@@ -204,7 +206,7 @@ class tcpSession : public IOInterface {
 			if ( responses[current_response].completed() )
 				return END;
 		}
-		return SUCCESS;
+		return ret;
 	}
 	int  		  writeSocket() {
 		//TODO maybe not sent all response for once cause
@@ -232,6 +234,7 @@ class tcpSession : public IOInterface {
 		char buff[BUFF_SIZE];
 		memset(buff, 0, BUFF_SIZE);
 		int rc = read(fd, buff, BUFF_SIZE - 1);
+		log(BLUE"\tsession reading...fd= ", fd, "read="RESET, rc);
 		if (rc == 0) {
 			//std::cerr << RED"closed"RESET;
 			return END; //TODO should return  END
@@ -240,7 +243,8 @@ class tcpSession : public IOInterface {
 			log(RED"read socket error: ",strerror(errno),RESET);
 			return ERROR;
 		}
-		buffer.append( buff );
+		buffer.insert(buffer.end(), buff, buff + rc);
+//		buffer.append( buff );
 		requests[current_request].parseInput( buffer );
 
 		if (requests[current_request].isComplete()) {

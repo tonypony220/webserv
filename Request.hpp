@@ -6,8 +6,8 @@
 #include "Server.hpp"
 #include "HttpStatusCodes.hpp"
 //it is RECOMMENDED that all HTTP senders and recipients support, at a minimum, request-line lengths of 8000 octets.
-#define BUFF_SIZE 10000
-#define MAX_BUFFER_SIZE 10000
+#define BUFF_SIZE 100000
+#define MAX_HEADER_SIZE 1000
 // flags
 #define PARSE_START_LINE 1
 #define HEADER 	  		 2
@@ -21,7 +21,7 @@
 #define SUCCESS 		 0
 #define END 			 1
 #define CRLF "\r\n"
-
+#define BYTE char
 
 std::string HttpMethods[] = {"GET", "POST", "PUT", "CONNECT", "DELETE", "OPTIONS", "TRACE"};
 std::string HttpMethodsImplemented[] = {"GET", "POST", "DELETE", "PUT" };
@@ -51,6 +51,7 @@ Server response:
 class HttpParser {
   protected:
 	std::string   	buffer;
+	std::vector<BYTE> request_buffer;
 //	std::string   	bufExt;
 	unsigned int	state; // it was char but outputed nonprintable chars
 	unsigned int 	code;
@@ -98,7 +99,7 @@ class HttpParser {
 ///			response = other.getResponse();
 ///			return *this;
 ///		}
-	std::string & get_request_buffer() { return buffer; }
+	std::vector<BYTE> & get_request_buffer() { return request_buffer; }
 	std::map<std::string, std::string> & getHeaders() { return headers; }
 	unsigned int & getState() { return state; }
 
@@ -130,10 +131,9 @@ class HttpParser {
 //			return 1;
 //		}
 
-	int parseInput(std::string & input) {
+	int parseInput(std::vector<BYTE> & input) {
 		counter++;
 		//verbose && std::cout << "parsing.." << std::endl;
-//		verbose && std::cout << "parsing input buffer: \n"BLUE << input << RESET << std::endl;
 		while ( !input.empty() && !isComplete() ) {
 			//verbose && std::cout << "input buffer: " << input << std::endl;
 			//buffer.clear();	
@@ -150,28 +150,45 @@ class HttpParser {
 		return END; // does not matter for now
 	}
 
-	int getHeaderLine(std::string & input) {
+	// TODO may be non-class-member
+	std::vector<BYTE>::iterator find_CRLF(std::vector<BYTE> & input) {
+		std::vector<BYTE>::iterator start = input.begin();
+		std::vector<BYTE>::iterator res = find(start, input.end(), '\r');
+		while ( res != input.end() ) {
+			if ( *(res + 1) == '\n' )
+				return res;
+			start = res + 1;
+			res = find(start, input.end(), '\r');
+		}
+		return res;
+	}
+
+	int getHeaderLine(std::vector<BYTE> & input) {
 		/// take header from input and return carved string
 	//	verbose && std::cout << "INPUT\""BLUE << std::endl << input << RESET"\"" << std::endl;
-	//verbose && std::cout << "carving.."  << std::endl;
-
-		size_t crlf_pos = input.find("\r\n");
-		//verbose && std::cout << "pos"BLUE << crlf_pos << RESET << std::endl;
-		if (crlf_pos == std::string::npos) {
+	//  verbose && std::cout << "carving.."  << std::endl;
+	//  verbose && std::cout << "pos"BLUE << crlf_pos << RESET << std::endl;
+		std::vector<BYTE>::iterator crlf = find_CRLF(input);
+//		size_t crlf_pos = input.find("\r\n");
+//		if (crlf_pos == std::string::npos) {
+		if (crlf == input.end()) {
 			verbose && std::cout << "no CRLF" << std::endl;
 			return END;
-		}
-		if ( input.size() > MAX_BUFFER_SIZE ) {
-			setCode(HttpStatus::URITooLong); // TODO not correct
-			return END; // on error our request is complete
 		}
 
 //		verbose && std::cout << "buffer before carve: "RED << buffer << RESET << std::endl;
 //		verbose && std::cout << "input before carve: "CYAN << input << RESET << std::endl;
-		buffer = input.substr(0, crlf_pos);  // "content-lenght 40 CRLF
+//		buffer = input.substr(0, crlf_pos);  // "content-lenght 40 CRLF
+		buffer.assign(input.begin(), crlf);
+		// TODO not correct
+		if ( buffer.size() > MAX_HEADER_SIZE ) {
+			setCode(HttpStatus::URITooLong);
+			return END; // on error our request is complete
+		}
 		//verbose && std::cout << "LINE: '"CYAN << buffer << RESET"'" << std::endl;
 //		verbose && std::cout << "pos"BLUE << crlf_pos << RESET << std::endl;
-		input.erase(0, crlf_pos + 2);
+		input.erase(input.begin(), crlf + 2);
+//		input.erase(0, crlf_pos + 2);
 //		verbose && std::cout << "input after erace: "CYAN << input << RESET << std::endl;
 		if (buffer.empty()) {
 			//std::cout << BLUE;
@@ -192,7 +209,7 @@ class HttpParser {
 	}
 	/// im keeping that wired interface for future corrections and cause i like that : )
 	int parseStartLine() {
-		verbose && std::cout << "start line.. "  << std::endl;
+		log(BLUE"parsing start line.. "RESET);
 		///	request-line   = method SP request-target SP HTTP-version // CRLF
 		size_t pos = find_whitespace(buffer);
 		if ( pos == std::string::npos )
@@ -291,14 +308,20 @@ class HttpParser {
 		} else 
 			length == 0 && setState(DONE); // TODO
 	}
-	int find_chunk_size( std::string & input ) {
-		std::string::size_type pos = input.find(CRLF);
-		if (pos == std::string::npos) {
+	int find_chunk_size( std::vector<BYTE> & input ) {
+		std::vector<BYTE>::iterator crlf = find_CRLF(input);
+		if (crlf == input.end()) {
 			log(YELLOW"chunk size not complete yet"RESET);
 			return SUCCESS;
 		}
-		std::string chunk_head = input.substr(0, pos);  // "content-lenght 40 CRLF
-		input.erase(0, pos + 2);
+		std::string::size_type pos;
+//		if (pos == std::string::npos) {
+//			log(YELLOW"chunk size not complete yet"RESET);
+//			return SUCCESS;
+//		}
+		std::string chunk_head(input.begin(), crlf);
+		input.erase(input.begin(), crlf + 2);
+//		input.erase(0, pos + 2);
 		pos = chunk_head.find(';');
 		if (pos != std::string::npos) {
 			log(BLUE"chunk extension found"RESET);
@@ -315,53 +338,75 @@ class HttpParser {
 		return SUCCESS;
 		//}
 	}
-	// chunk          = chunk-size [ chunk-ext ] CRLF
-    //                  chunk-data CRLF
-    // chunk-size     = 1*HEXDIG
-    // last-chunk     = 1*("0") [ chunk-ext ] CRLF
-	// chunk-ext      = *( ";" chunk-ext-name [ "=" chunk-ext-val ] )
-    // chunk-ext-name = token
-    // chunk-ext-val  = token / quoted-string
-	// TODO trailer part
-	int parse_chunked( std::string & input ) {
+	/*
+	chunk          = chunk-size [ chunk-ext ] CRLF
+                     chunk-data CRLF
+    chunk-size     = 1*HEXDIG
+    last-chunk     = 1*("0") [ chunk-ext ] CRLF
+	chunk-ext      = *( ";" chunk-ext-name [ "=" chunk-ext-val ] )
+    chunk-ext-name = token
+    chunk-ext-val  = token / quoted-string
+    */ // TODO trailer part
+	int parse_chunked( std::vector<BYTE> & input ) {
 		log("parsing chunked. size found=", chunk_size_parsed);
 		if ( !chunk_size_parsed && find_chunk_size(input) == ERROR ) {
 			log(RED"chunked size error"RESET);
 			return ERROR;
 		}
-		log("chunked size=", chunk_size);
-		if ( chunk_size == 0 ) 
+		if (chunk_size_parsed) log(YELLOW"chunked size="RESET, chunk_size);
+		if ( chunk_size == 0 )
 			return END;  // for now we ignore trailer part
 		if ( input.size() >= chunk_size + 2 ) {
-			log("getting full chunk");
-			std::string::size_type pos = input.find(CRLF, chunk_size);
-			if ( pos != chunk_size ) {
-				log(RED"chunked CRLF error, pos=", pos, RESET);
+			log(PURPLE"getting full chunk"RESET);
+//			std::vector<BYTE>::iterator crlf = find_CRLF(input);
+//			std::string::size_type pos = input.find(CRLF, chunk_size);
+//			log(PURPLE"crlf pos = ", crlf - input.begin(), RESET);
+			if ( input[chunk_size] != '\r' || input[chunk_size+1] != '\n') {
+				log(RED"chunked CRLF error", RESET);
 				return ERROR;
 			}
-			buffer.append(input.begin(), input.begin() + pos);
-			input.erase(0, pos + 2);
+			request_buffer.insert(request_buffer.end(),
+								  input.begin(),
+								  input.begin() + chunk_size
+			);
+//			buffer.append(input.begin(), input.begin() + pos);
+//			input.erase(0, pos + 2);
+			input.erase(input.begin(), input.begin() + chunk_size + 2);
 //			log("request buffer: ", buffer);
 			chunk_size_parsed = false;
 		} else {
 			log("getting part chunk");
-			buffer.append(input);
+			request_buffer.insert(request_buffer.end(),
+								  input.begin(),
+								  input.end()
+			);
+//			buffer.append(input);
 			chunk_size -= input.size();
+			input.clear();
 		}
 		return SUCCESS;
 	}
 
-	int parseBody(std::string & input) {
-		verbose && std::cout << "body consuming, input buffer size=" << input.size()
-		<< " data: "CYAN << input << RESET << std::endl;
+	int parseBody(std::vector<BYTE> & input) {
+		std::cout << "\rbody consuming, input buffer size=" << input.size();
+		std::cout << " len=" << length << " / buffsize=" << buffer.size()  << " - " << '\n';
+//		std::cout << " data: "CYAN << input << RESET << std::endl;
 
 		if ( !transfer_encoding.size() ) {
-			if ( buffer.size() + input.size() >= length ) {
-				buffer.append( input.substr(0, length - buffer.size()) );
+			if ( request_buffer.size() + input.size() >= length ) {
+				request_buffer.insert(request_buffer.end(),
+									  input.begin(),
+									  input.begin() + length - request_buffer.size()
+									  );
+//				buffer.append( input.substr(0, length - buffer.size()) );
 				setState(DONE);
-				// should be error not  correct data? 
+				// should be error not  correct data?
 			} else {
-				buffer.append(input);
+				request_buffer.insert(request_buffer.end(),
+									  input.begin(),
+									  input.end()
+									  );
+//				buffer.append(input);
 			}
 			input.clear();
 		} else {

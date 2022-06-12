@@ -22,7 +22,9 @@ then
 	#echo "Accept: */*";
 	echo ; echo; sleep 1;
 	} | tee /dev/tty | telnet #localhost 8080
-else {
+elif [[ $1 == c ]]
+then
+	{
 	echo "open localhost 8080";
 	sleep 1;
 	echo "PUT /upload/t.cpp HTTP/1.1";
@@ -38,6 +40,17 @@ else {
 	echo "116111";
 	#echo "#include "HttpSession.hpp"#include <vector>int main () {	std::vector<HttpSession> v;	HttpSession s(2);//	Session ss(3);	v.push_back(s);	v.push_back(HttpSession(33));	for(std::vector<HttpSession>::iterator it = v.begin(); it != v.end(); ++it) {		std::cout << *it << std::endl;	}}";
 	#echo "0"; sleep 1;
+} | tee /dev/tty | telnet #localhost 8080
+elif [[ $1 == e ]]
+then
+	{
+	echo "open localhost 2001";
+	sleep 1;
+	echo "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAa";
+	echo "116111dDDDDDDDDDDDDDDDDDDDDDd";
+	#echo "#include "HttpSession.hpp"#include <vector>int main () {	std::vector<HttpSession> v;	HttpSession s(2);//	Session ss(3);	v.push_back(s);	v.push_back(HttpSession(33));	for(std::vector<HttpSession>::iterator it = v.begin(); it != v.end(); ++it) {		std::cout << *it << std::endl;	}}";
+	#echo "0"; 
+	sleep 1;
 } | tee /dev/tty | telnet #localhost 8080
 
 fi

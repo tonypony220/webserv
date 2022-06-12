@@ -254,7 +254,7 @@ class HttpResponse : public HttpParser {
 		target.erase(0, 1);
 	}
 	int create_file() {
-		fd = open(target.c_str(), O_WRONLY | O_NONBLOCK | O_CREAT, 0400);
+		fd = open(target.c_str(), O_WRONLY | O_NONBLOCK | O_CREAT | O_TRUNC ,  0400);
 		if ( fd < 0 ) {
 			log(RED"file open error: ", strerror(errno),RESET);
 			setCode(HttpStatus::NotFound, "open failed");
