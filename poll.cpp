@@ -120,7 +120,9 @@ int loop (Server & serv) {
 					log(RESET);
 					poll_fd.events = POLLIN | POLLOUT;
 					fds.push_back(poll_fd);
-					io_sessions.push_back(sptr<IOInterface>( new tcpSession(poll_fd.fd, &serv)));
+					tcpSession * session = new tcpSession(poll_fd.fd, &serv);
+					session->ip = std::string(str);
+					io_sessions.push_back(sptr<IOInterface>(session));
 				}
 				//accept_connections(fds[i].fd, *io_sessions[i]->getServ(), io_sessions, fds);
 				continue;
@@ -128,15 +130,15 @@ int loop (Server & serv) {
 			int ret = io_sessions[i]->processEvent(fds[i].revents);
 //			log(BLUE"\rprocessed event=", ret, RESET);
 			std::cout << BLUE"\rprocessed event ret =" << ret << "POLLIN=" << (fds[i].revents & POLLIN) << RESET;
-			if ( ret == HANDLE_CGI ) {
+			if ( ret == ADD_IFCE ) {
 				log(BLUE"cgi session creating..."RESET, poll_fd.fd);
 				//CgiPipe * cgi = io_sessions[i]->get_cgi_pipe();
-				IOInterface * cgi = io_sessions[i]->get_interface();
-				if (cgi) {
+				IOInterface * io = io_sessions[i]->get_interface();
+				if (io) {
 					poll_fd.events = POLLIN;
-					poll_fd.fd = cgi->getFd();
+					poll_fd.fd = io->getFd();
 					fds.push_back(poll_fd);
-					io_sessions.push_back(sptr<IOInterface>( cgi ));
+					io_sessions.push_back(sptr<IOInterface>( io ));
 					log(BLUE"cgi created", poll_fd.fd);
 				} // TODO handle error
 				else
@@ -155,7 +157,7 @@ int loop (Server & serv) {
 //				log("cgi failed", poll_fd.fd);
 //			}
 			else if (ret != SUCCESS) {
-				log(BLUE"closing connection fd=", poll_fd.fd, RESET);
+				log(BLUE" closing connection fd=", poll_fd.fd, RESET);
 //				close_connection(sessions, fds);
 				close(fds[i].fd);
 				// https://stackoverflow.com/questions/9927163/erase-element-in-vector-while-iterating-the-same-vector
@@ -176,6 +178,8 @@ int main() {
 	ports.push_back(2002);
 	ports.push_back(2001);
 	Server serv(ports, "/Users/mehtel/coding/webserv");
+	serv.enable_cgi("py");
+	serv.enable_cgi("sh");
 	/* sockets.push_back(SocketTCP(2002)); */
 	/* sockets.push_back(SocketTCP(2001)); */
 

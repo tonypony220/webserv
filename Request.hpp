@@ -14,7 +14,7 @@
 #define PARSE_BODY		 3
 #define DONE 	  		 4
 
-#define HANDLE_CGI		 10
+#define ADD_IFCE		 10
 #define HANDLE_FILE 	 11
 
 #define ERROR 	  		-1
@@ -75,6 +75,7 @@ class HttpParser {
 	bool 		  verbose;
 //	    int	 		  fd;
   public:
+	std::string	  start_line; // for logger
 	std::string   debug_info;
 	Server *	  server_ptr;
 
@@ -211,6 +212,7 @@ class HttpParser {
 	int parseStartLine() {
 		log(BLUE"parsing start line.. "RESET);
 		///	request-line   = method SP request-target SP HTTP-version // CRLF
+		start_line = buffer;
 		size_t pos = find_whitespace(buffer);
 		if ( pos == std::string::npos )
 			return setCode(HttpStatus::BadRequest, "whitespace");

@@ -133,6 +133,7 @@ class tcpSession : public IOInterface {
 	std::vector<char> 		  buffer;
 
   public:
+	std::string 			  ip;
 
 	tcpSession(int fd, Server * serv)
 		: IOInterface(fd, serv),
@@ -167,12 +168,14 @@ class tcpSession : public IOInterface {
 
 	IOInterface * get_interface() {
 //	CgiPipe * 	 get_cgi_pipe() {
-		if ( responses[current_response].get_resp_state() & CGI ) {
+		if ( responses[current_response].get_resp_type() & CGI ) {
+			log(BLUE"creating additional Interface..CGI "RESET, fd);
 			int fd = responses[current_response].cgi();
 			if (fd == ERROR)
 				return NULL;
 			return new CgiPipe(fd, &responses[current_response]);
 		} else {
+			log(BLUE"creating additional Interface..FILE "RESET, fd);
 			int fd = responses[current_response].create_file();
 			if (fd == ERROR)
 				return NULL;
@@ -191,9 +194,9 @@ class tcpSession : public IOInterface {
 //		log("\tresponses=", responses.size());
 		if ( !responses.empty() ) {
 //			responses[current_response].();
-			if (responses[current_response].is_cgi()) {
-				log(BLUE"session start create additional Interface..."RESET, fd);
-				return HANDLE_CGI;
+			if (responses[current_response].does_need_interface()) {
+				log(BLUE"session should create additional Interface..."RESET, fd);
+				return ADD_IFCE;
 			}
 			if (responses[current_response].ready_to_write()) {// && (event & POLLOUT) ) { // TCP buffer have space to write to
 				log("\tsession writing...", fd);
@@ -203,16 +206,23 @@ class tcpSession : public IOInterface {
 //				if (ret == END && responses[current_response].completed()) // TODO next response
 //					return END;
 			}
-			if ( responses[current_response].completed() )
+			if ( responses[current_response].completed() ) {
+				//127.0.0.1 - - [13/Jun/2022:19:19:54 +0300] "GET /file HTTP/1.1" 200 0 "-" "curl/7.54.0"
+				std::cout << GREEN << ip << " - "
+				<< responses[current_response].start_line
+				<< "  "
+				<< responses[current_response].short_log_line()
+				<< RESET << std::endl;
 				return END;
+			}
 		}
 		return ret;
 	}
 	int  		  writeSocket() {
 		//TODO maybe not sent all response for once cause
 		// e
-		std::string & buff = responses[current_response].get_response_buffer();
-		int 		rc = ::write(fd, buff.c_str(), buff.size());
+		std::vector<BYTE> & buff = responses[current_response].get_response_buffer();
+		int 		rc = ::write(fd, &buff[0], buff.size());
 //		log("write to socket:", PURPLE, buff, RESET); //fd &&
 		if (rc < 0) {
 //			std::cerr << RED"write error: "RESET << strerror(errno);
@@ -224,9 +234,9 @@ class tcpSession : public IOInterface {
 			log(RED"idle write: ", RESET);
 			return SUCCESS;
 		} //if (rc == 0) { ????????????
-		buff.erase(0, rc);
-		if ( buff.empty() )
-			return END;
+		buff.erase(buff.begin(), buff.begin() + rc);
+//		if ( buff.empty() )
+//			return END;
 		//responses[current_response].
 		return SUCCESS;
 	}

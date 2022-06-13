@@ -16,6 +16,14 @@
 # define REVERSE "\033[;7m"
 #define VERBOSE
 
+template <typename T>
+void p(T a) {
+	std::cout << "data: ";
+	for (typename T::iterator i = a.begin(); i != a.end(); i++)
+		std::cout << "(" << *i << ") ";
+	std::cout << std::endl;
+}
+
 template <class T> 
 void log(const T & t) { std::cout << t << std::endl; }
 
