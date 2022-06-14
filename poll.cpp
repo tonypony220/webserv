@@ -129,7 +129,7 @@ int loop (Server & serv) {
 			}
 			int ret = io_sessions[i]->processEvent(fds[i].revents);
 //			log(BLUE"\rprocessed event=", ret, RESET);
-			std::cout << BLUE"\rprocessed event ret =" << ret << "POLLIN=" << (fds[i].revents & POLLIN) << RESET;
+//			std::cout << BLUE"\rprocessed event fd=" << fds[i].fd << "ret=" << ret << " POLLIN=" << (fds[i].revents & POLLIN) << RESET;
 			if ( ret == ADD_IFCE ) {
 				log(BLUE"cgi session creating..."RESET, poll_fd.fd);
 				//CgiPipe * cgi = io_sessions[i]->get_cgi_pipe();

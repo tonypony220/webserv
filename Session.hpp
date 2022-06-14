@@ -17,11 +17,11 @@ public:
 	IOInterface(int  fd_, Server * serv) 
 		: fd(fd_), counter(0), server_ptr(serv) 
 	{
-		log("IOInterface created fd: ", fd);
+//		log("IOInterface created fd: ", fd);
 	}
 	size_t			counter;
 	virtual			~IOInterface() {
-		log(counter, " IOInterface destructed: ", fd);
+//		log(counter, " IOInterface destructed: ", fd);
 	}
 	int 		 	getFd( void ) const { return fd; }
 	Server * 		getServ( void ) const { return server_ptr; }
@@ -39,15 +39,22 @@ public:
 	/* int fd_out; */
 
 	CgiPipe(int fd, HttpResponse * resp) 
-		: IOInterface(fd, NULL), response_ptr(resp) {} // NULL stub 
+		: IOInterface(fd, NULL), response_ptr(resp) {
+		log(" CGI Interface created, fd=", fd);
+	} // NULL stub
+
+	~CgiPipe() {
+		log(" CGI Interface destructed, fd=", fd);
+	}
 
 	virtual int		processEvent( short event ) {
 		int ret;
+		log(PURPLE"\r\t\t\t\tprocessing cgi pipe");
 		if (event & POLLIN) {
 			//log("\tsession reading...fd=",fd);
 			ret = readPipe();
-			if (ret == ERROR)
-				return ERROR;
+			if (ret == ERROR || ret == END)
+				return ret;
 		}
 	//	if ( !response_ptr->buffer.empty ) { //event & POLLOUT && 
 	//		ret = writePipe();
@@ -98,7 +105,12 @@ public:
 	HttpResponse *	response_ptr;
 
 	File(int fd, HttpResponse * resp)
-		: IOInterface(fd, NULL), response_ptr(resp) {} // NULL stub
+		: IOInterface(fd, NULL), response_ptr(resp) {
+		log(" FILE Interface created, fd=", fd);
+	} // NULL stub
+	~File() {
+		log(" FILE Interface destructed, fd=", fd);
+	}
 
 	virtual int		processEvent( short event ) {
 		int ret;
@@ -199,7 +211,7 @@ class tcpSession : public IOInterface {
 				return ADD_IFCE;
 			}
 			if (responses[current_response].ready_to_write()) {// && (event & POLLOUT) ) { // TCP buffer have space to write to
-				log("\tsession writing...", fd);
+				std::cout << "\r\t\t\t\t\t\t\t\t\t\tsession writing..." << fd;
 				ret = writeSocket();
 				if (ret == ERROR)
 					return ERROR;
@@ -220,7 +232,6 @@ class tcpSession : public IOInterface {
 	}
 	int  		  writeSocket() {
 		//TODO maybe not sent all response for once cause
-		// e
 		std::vector<BYTE> & buff = responses[current_response].get_response_buffer();
 		int 		rc = ::write(fd, &buff[0], buff.size());
 //		log("write to socket:", PURPLE, buff, RESET); //fd &&

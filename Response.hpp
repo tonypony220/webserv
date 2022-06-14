@@ -6,6 +6,7 @@
 #include <sys/stat.h>
 #include <unistd.h>
 #include <dirent.h>
+#include <cstdlib>
 #include <sys/stat.h> // chmod
 #define IN 0
 #define OUT 1
@@ -48,13 +49,14 @@ class HttpResponse : public HttpParser {
 ///		}
 	// 1. store headers.
 	// 2. store ready full response text
-	std::string		response;
-	std::string		response_body; // * temp var for body
+	std::string			response;
+	std::string			response_body; // * temp var for body
 	std::vector<BYTE>	response_buffer;
-	std::string		file_type; // * file type for CGI
-	int 			fd;	// * for reading file only
-	unsigned int	type;
-	unsigned int	resp_state;
+	std::string			file_type; // * file type for CGI
+	int 				fd;	// * for reading file only
+	int					pid;
+	unsigned int		type;
+	unsigned int		resp_state;
 
 	std::vector<BYTE> & get_response_buffer() {
 		return response_buffer;
@@ -96,6 +98,8 @@ class HttpResponse : public HttpParser {
 		add_status_line();
 		add_headers();
 //		response_buffer = response + response_body;
+//		log("resp_headers: ", response);
+//		log("resp_body: ", response_body);
 		response_buffer.insert(response_buffer.end(),
 							   response.begin(),
 							   response.end()
@@ -107,6 +111,16 @@ class HttpResponse : public HttpParser {
 		response.clear();
 		response_body.clear();
 	}
+	int wait_process() {
+		int status;
+		int ret =  waitpid(pid, &status, WNOHANG) < 0;
+		if ( ret < 0
+		||  (WIFEXITED(status) && WEXITSTATUS(status) > 0)
+		||  WIFSIGNALED(status))
+			return ERROR;
+		return SUCCESS;
+	}
+
 	int ready_to_write() {
 		if ( resp_state == STATE_READY ) {
 			log(BLUE"response state READY "RESET, get_state_type_str());
@@ -122,10 +136,16 @@ class HttpResponse : public HttpParser {
 			return 1;
 		}
 		if ( type & (CGI | UPLOAD) ) {
-			log(BLUE"response CGI | UPLOAD "RESET, get_state_type_str());
+//			log(BLUE"response CGI | UPLOAD "RESET, get_state_type_str());
 			if ( resp_state < STATE_DONE )
 				return 0;
 			if ( resp_state == STATE_DONE ) {
+				if ( wait_process() == ERROR ) {
+					setCode(HttpStatus::InternalServerError, "cgi fail");
+//					response_body.clear();
+					return 0;
+				}
+				length = response_body.size();
 				fill_buffer_to_send();
 				resp_state = STATE_READY;
 			}
@@ -189,14 +209,17 @@ class HttpResponse : public HttpParser {
 		  return EXIT_SUCCESS;
 		} else {
 		  /* could not open directory */
-		  perror ("");
+		  perror("error list dir");
 		  return EXIT_FAILURE;
 		}
 	}
 
 	int search_file() {
 		// https://stackoverflow.com/questions/146924/how-can-i-tell-if-a-given-path-is-a-directory-or-a-file-c-c
-		std::string path(server_ptr->root + target);	
+		std::string path(server_ptr->root + target);
+		// realpath does not work
+		log("searching in: ", path);
+
 		struct stat s;
 		if( stat( path.c_str(), &s ) == EXIT_SUCCESS )
 		{
@@ -254,8 +277,8 @@ class HttpResponse : public HttpParser {
 	void add_headers() {
 		response += "Date: Mon, 27 Jul 2009 12:28:53 GMT\r\n";
 //		size_t body_size = response_body.size();
-		if ( length )
-			response += "Content-Length: " + itoa(length) +"\r\n";
+//		if ( length )
+		response += "Content-Length: " + itoa(length) +"\r\n";
 //		response += "Content-Type: text/html\r\n";
 		//response += "Connection: close\r\n";
 		response += "Server: tonypony web server\r\n";
@@ -315,7 +338,7 @@ class HttpResponse : public HttpParser {
 			if ( (method == "GET" || method == "DELETE")  && search_file() == EXIT_FAILURE ) {
 				setCode(HttpStatus::NotFound, "file not found");
 			} else if ( method == "GET" && type & CGI ) {
-				get_path_from_target();
+//				get_path_from_target();
 			}
 			else if ( method == "GET" && ( type & FILE ))
 			{
@@ -353,41 +376,57 @@ class HttpResponse : public HttpParser {
 		//response = "HTTP/1.1 200 OK\r\n"
      	//		   "Date: Mon, 27 Jul 2009 12:28:53 GMT\r\nContent-Length: 45\r\n\r\nHello World! My payload includes a trailing\r\n";
 	}
-	int spawn_process(const char *const *args, const char * const *pEnv) {
+
+	bool does_need_interface() {
+		if ( (type & (CGI | UPLOAD)) && resp_state == STATE_NONE ) {
+			resp_state = STATE_WAIT;
+//			log(BLUE"need io? true "RESET, get_state_type_str());
+			return true;
+		}
+//		log(BLUE"need io? false"RESET, get_state_type_str());
+		return false;
+	}
+
+	int spawn_process(const char *const *args) {
 		/* Create copy of current process */
 		int pid = fork();
 		/* The parent`s new pid will be 0 */
 		if(pid == 0) {
-			/* We are now in a child progress 
+			/* We are now in a child progress
 			Execute different process */
-			execve(args[0], (char* const*)args, (char* const*)pEnv);
+//			execvpe(args[0], (char* const*)args, (char* const*)pEnv);
+			execvp(args[0], (char* const*)args);
 			/* This code will never be executed */
+			std::cout << RED"\t\t\t\t\t<<<<<<<<<<<<<" << strerror(errno) << RESET;
 			exit(EXIT_SUCCESS);
 		}
 		/* We are still in the original process */
 		return pid;
 	}
+	void set_environ_for_cgi() {
+		setenv("QUERY_STRING", query_string.c_str(), 1);
+		setenv("PATH_INFO", (server_ptr->root + target).c_str(), 1);
+	}
+	const char ** create_cgi_args() {
+		std::vector<const char *> args;
+		std::string path(server_ptr->root + target);
 
-	bool does_need_interface() {
-		if ( (type & (CGI | UPLOAD)) && resp_state == STATE_NONE ) {
-			resp_state = STATE_WAIT;
-			log(BLUE"need io? true "RESET, get_state_type_str());
-			return true;
-		}
-		log(BLUE"need io? false"RESET, get_state_type_str());
-		return false;
+		args.push_back(std::string("python3").c_str());
+		args.push_back(path.c_str());
+		args.push_back(0);
+		return &args[0];
 	}
 
 	int cgi() {
 		//Формируем в глобальных переменных тело запроса и его длинну
 		const std::string strRequestBody = "===this is request body===\n";
-		const std::string strRequestHeader = "Content-Length=" + std::to_string((long long)strRequestBody.length());
+		const std::string strRequestHeader = "Content-Length="
+				+ std::to_string((long long)strRequestBody.length());
 
-//Формируем переменные окружения которые будут отосланы дочернему процессу
-		const char *pszChildProcessEnvVar[4] = {strRequestHeader.c_str(), "VARIABLE2=2", "VARIABLE3=3", 0};
-
-//Формируем переменные командной строки для дочернего процесса. Первая переменная - путь к дочернему процессу.
-		const char *pszChildProcessArgs[4] = {"./Main_Child.exe", "first argument", "second argument", 0};
+//		std::string path(server_ptr->root + target);
+//		const char *pszChildProcessArgs[3] = {"python3",
+//											  path.c_str(),
+//											  0};
 		int fdin[2], fdout[2];
 		//fdin[0] = fdin[1] = fdout[0] = fdout[1] = -1;
 
@@ -407,7 +446,7 @@ class HttpResponse : public HttpParser {
 		close(fdin[IN]);
 		close(fdout[OUT]);
 
-		const int nChildProcessID = spawn_process(pszChildProcessArgs, pszChildProcessEnvVar);
+		pid = spawn_process(create_cgi_args());
 
 		// Duplicate copy of original stdin an stdout back into stdout
 		dup2(fdOldStdIn, fileno(stdin));

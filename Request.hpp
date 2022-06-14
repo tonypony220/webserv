@@ -60,6 +60,7 @@ class HttpParser {
 
 	std::string 	method;
 	std::string 	target;
+	std::string		query_string;
 	std::string 	version;
 	std::string 	protocol;
 	std::string 	transfer_encoding;
@@ -136,7 +137,7 @@ class HttpParser {
 		counter++;
 		//verbose && std::cout << "parsing.." << std::endl;
 		while ( !input.empty() && !isComplete() ) {
-			//verbose && std::cout << "input buffer: " << input << std::endl;
+//			verbose && std::cout << "input buffer: " << input << std::endl;
 			//buffer.clear();	
 			if (state < PARSE_BODY && getHeaderLine(input) == END)
 				break; // in case of error or not full header line
@@ -177,10 +178,10 @@ class HttpParser {
 			return END;
 		}
 
-//		verbose && std::cout << "buffer before carve: "RED << buffer << RESET << std::endl;
 //		verbose && std::cout << "input before carve: "CYAN << input << RESET << std::endl;
 //		buffer = input.substr(0, crlf_pos);  // "content-lenght 40 CRLF
 		buffer.assign(input.begin(), crlf);
+		verbose && std::cout << "header line: "BLUE << buffer << RESET << std::endl;
 		// TODO not correct
 		if ( buffer.size() > MAX_HEADER_SIZE ) {
 			setCode(HttpStatus::URITooLong);
@@ -209,6 +210,13 @@ class HttpParser {
 		//return pos;
 	}
 	/// im keeping that wired interface for future corrections and cause i like that : )
+	void get_query_string() {
+		size_t pos = target.find("?");
+		if ( pos == std::string::npos )
+			return;
+		query_string = target.substr(pos + 1, target.size() - 1);
+		target = target.substr(0, pos);
+	}
 	int parseStartLine() {
 		log(BLUE"parsing start line.. "RESET);
 		///	request-line   = method SP request-target SP HTTP-version // CRLF
@@ -228,6 +236,7 @@ class HttpParser {
 		if ( pos == std::string::npos )
 			return setCode(HttpStatus::BadRequest, "method not exist");
 		target = buffer.substr(0, pos);
+		get_query_string();
 		buffer.erase(0, pos + 1);
 
 		// buffer: HTTP/1.1
@@ -429,6 +438,7 @@ class HttpParser {
 		o << "\tversion: " << version << std::endl;
 		o << "\tdebug_info: " << debug_info << std::endl;
 		o << "\ttarget: "  << target << std::endl;
+		o << "\tquery: "  << query_string << std::endl;
 		o << "\theaders number: " << headers.size() << std::endl;
 		o << "\theaders: " << std::endl;
 //		std::map< std::string, std::string>::iterator it;
