@@ -397,6 +397,8 @@ class HttpResponse : public HttpParser {
 //			execvpe(args[0], (char* const*)args, (char* const*)pEnv);
 			execvp(args[0], (char* const*)args);
 			/* This code will never be executed */
+			setCode(HttpStatus::InternalServerError,
+					std::string(strerror(errno)));
 			std::cout << RED"\t\t\t\t\t<<<<<<<<<<<<<" << strerror(errno) << RESET;
 			exit(EXIT_SUCCESS);
 		}
@@ -407,8 +409,7 @@ class HttpResponse : public HttpParser {
 		setenv("QUERY_STRING", query_string.c_str(), 1);
 		setenv("PATH_INFO", (server_ptr->root + target).c_str(), 1);
 	}
-	const char ** create_cgi_args() {
-		std::vector<const char *> args;
+	const char ** create_cgi_args(std::vector<const char *> & args) {
 		std::string path(server_ptr->root + target);
 
 		args.push_back(std::string("python3").c_str());
@@ -422,7 +423,7 @@ class HttpResponse : public HttpParser {
 		const std::string strRequestBody = "===this is request body===\n";
 		const std::string strRequestHeader = "Content-Length="
 				+ std::to_string((long long)strRequestBody.length());
-
+		std::vector<const char *> args;
 //		std::string path(server_ptr->root + target);
 //		const char *pszChildProcessArgs[3] = {"python3",
 //											  path.c_str(),
@@ -446,7 +447,7 @@ class HttpResponse : public HttpParser {
 		close(fdin[IN]);
 		close(fdout[OUT]);
 
-		pid = spawn_process(create_cgi_args());
+		pid = spawn_process(create_cgi_args(args));
 
 		// Duplicate copy of original stdin an stdout back into stdout
 		dup2(fdOldStdIn, fileno(stdin));
