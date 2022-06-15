@@ -19,8 +19,9 @@
 template <typename T>
 void p(T a) {
 	std::cout << "data: ";
-	for (typename T::iterator i = a.begin(); i != a.end(); i++)
-		std::cout << "(" << *i << ") ";
+	for (typename T::iterator i = a.begin(); i != a.end(); i++)  {
+			std::cout << "(" << *i << ") ";
+	}
 	std::cout << std::endl;
 }
 

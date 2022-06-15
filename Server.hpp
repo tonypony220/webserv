@@ -2,6 +2,9 @@
 #include "Session.hpp"
 #include "SocketTCP.hpp"
 #include <algorithm>
+#include <map>
+
+//std::map<std::string, std::string> execs = {std::make_pair(".py", "python3")};
 
 class Server {
 public: 
@@ -10,10 +13,15 @@ public:
 	std::vector<std::string> cgi_extensions;
 	bool dir_listing;
 
+	std::map<std::string, std::string> execs;
+
 	Server( std::vector<int> & ports, std::string root_path )
 	: root(root_path) {
 		for (int i = 0; i < ports.size(); i++)
 			sockets.push_back(SocketTCP(ports[i]));
+//		execs[".py"] = "python3";
+//		execs[".cgi"] = "./";
+//		execs.insert(std::make_pair(".py", "python3"));
 	}
 	~Server() {}
 	//Server( const Server & copy ) { *this = copy; }
@@ -31,8 +39,6 @@ public:
 		if ( found != cgi_extensions.end())
 			return true;
 		return false;
-
-
 
 	}
 };

@@ -282,8 +282,16 @@ class HttpResponse : public HttpParser {
 //		response += "Content-Type: text/html\r\n";
 		//response += "Connection: close\r\n";
 		response += "Server: tonypony web server\r\n";
-		response += "\r\n";
+		if ( file_type == "html" )
+			response += "Content-type: text/html\r\n";
+		if ( type != CGI ) {
+			response += "\r\n";
+		}
+//		else {
+//			else
+//				response += "Content-type: text/plain" + itoa(length) +"\r\n";
 	}
+
 	void generate_response_body() {
 //		if (!code)
 //			setCode(HttpStatus::OK);
@@ -387,20 +395,33 @@ class HttpResponse : public HttpParser {
 		return false;
 	}
 
-	int spawn_process(const char *const *args) {
+//	int spawn_process(const char *const *args) {
+	int spawn_process(std::vector<std::string> string_args) {
 		/* Create copy of current process */
+
+		/* possible to get c_strs only in scope to keep them valid */
+//		set_environ_for_cgi();
+		std::vector<const char *> args;
+//		log(YELLOW"cgi args: "RESET);
+		for (int i=0; i<string_args.size(); i++) {
+//			log("\t*", string_args[i]);
+			args.push_back(string_args[i].c_str());
+		}
+		if (const char* env_p = std::getenv("QUERY_STRING"))
+			std::cout << "Your QUERY_STRING is: " << env_p << '\n';
+		args.push_back(0);
+
 		int pid = fork();
 		/* The parent`s new pid will be 0 */
-		if(pid == 0) {
+		if (pid == 0) {
 			/* We are now in a child progress
 			Execute different process */
 //			execvpe(args[0], (char* const*)args, (char* const*)pEnv);
-			execvp(args[0], (char* const*)args);
+//			execvp(args[0], (char* const*)&args[0]); //(char* const*)
+			execvp(args[0], (char* const*)&args[0]); //(char* const*)
 			/* This code will never be executed */
-			setCode(HttpStatus::InternalServerError,
-					std::string(strerror(errno)));
-			std::cout << RED"\t\t\t\t\t<<<<<<<<<<<<<" << strerror(errno) << RESET;
-			exit(EXIT_SUCCESS);
+			std::cerr << RED"\t\t\t\t\t<<<<<<fork error<<<<<<<" << strerror(errno) << RESET;
+			exit(EXIT_FAILURE);
 		}
 		/* We are still in the original process */
 		return pid;
@@ -409,21 +430,38 @@ class HttpResponse : public HttpParser {
 		setenv("QUERY_STRING", query_string.c_str(), 1);
 		setenv("PATH_INFO", (server_ptr->root + target).c_str(), 1);
 	}
-	const char ** create_cgi_args(std::vector<const char *> & args) {
+	std::vector<std::string> create_cgi_args() {
+		std::vector<std::string> args;
 		std::string path(server_ptr->root + target);
+		std::string			executable;
+		if (file_type == "py") {
+			args.push_back("python3");
+			args.push_back(path);
+		}
+		else if (file_type == "cgi" || file_type == "sh")
+			args.push_back("./" + path);
 
-		args.push_back(std::string("python3").c_str());
-		args.push_back(path.c_str());
-		args.push_back(0);
-		return &args[0];
+//			executable = "./" + target;
+
+//		std::string exec_name("python3");
+//		args.push_back(exec_name);
+//		args.push_back(path);
+//		args.push_back(exec_name.c_str());
+//		for (int i=0;i<9;i++) {log(int(exec_name.c_str()[i]), " ", exec_name.c_str()[i]);}
+//		args.push_back(path.c_str());
+//		args.push_back(0);
+//		log("cgi args: ");
+//		log("\t", args[0]);
+//		log("\t", args[1]);
+		return args;
 	}
 
 	int cgi() {
 		//Формируем в глобальных переменных тело запроса и его длинну
-		const std::string strRequestBody = "===this is request body===\n";
-		const std::string strRequestHeader = "Content-Length="
-				+ std::to_string((long long)strRequestBody.length());
-		std::vector<const char *> args;
+//		const std::string strRequestBody = "===this is request body===\n";
+//		const std::string strRequestHeader = "Content-Length="
+//				+ std::to_string((long long)strRequestBody.length());
+//		std::vector<const char *> args;
 //		std::string path(server_ptr->root + target);
 //		const char *pszChildProcessArgs[3] = {"python3",
 //											  path.c_str(),
@@ -447,7 +485,7 @@ class HttpResponse : public HttpParser {
 		close(fdin[IN]);
 		close(fdout[OUT]);
 
-		pid = spawn_process(create_cgi_args(args));
+		pid = spawn_process(create_cgi_args());
 
 		// Duplicate copy of original stdin an stdout back into stdout
 		dup2(fdOldStdIn, fileno(stdin));
@@ -458,7 +496,7 @@ class HttpResponse : public HttpParser {
 		close(fdOldStdOut);
 
 		//Отдаем тело запроса дочернему процессу
-		write(fdin[OUT], strRequestBody.c_str(), strRequestBody.length());
+//		write(fdin[OUT], &request_buffer[0], request_buffer.size());
 		return fdout[IN];
 
 	//	while (1)

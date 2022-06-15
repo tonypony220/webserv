@@ -180,6 +180,7 @@ int main() {
 	Server serv(ports, "/Users/mehtel/coding/webserv");
 	serv.enable_cgi("py");
 	serv.enable_cgi("sh");
+	serv.enable_cgi("cgi");
 	/* sockets.push_back(SocketTCP(2002)); */
 	/* sockets.push_back(SocketTCP(2001)); */
 

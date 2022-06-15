@@ -25,7 +25,7 @@ public:
 	}
 	int 		 	getFd( void ) const { return fd; }
 	Server * 		getServ( void ) const { return server_ptr; }
-	virtual int		processEvent( short event ) {};
+	virtual int		processEvent( short event ) { return SUCCESS ;};
 	virtual IOInterface * get_interface() { return NULL; }
 
 	Server *				  server_ptr;
@@ -85,6 +85,7 @@ public:
 		}
 		response_ptr->get_response_body().append( buff );
 //		buffer.append( buff );
+		return SUCCESS;
 	}
 
 //	int  		  writePipe() {
