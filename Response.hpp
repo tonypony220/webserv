@@ -7,6 +7,7 @@
 #include <unistd.h>
 #include <dirent.h>
 #include <cstdlib>
+#include <ctime>
 #include <sys/stat.h> // chmod
 #define IN 0
 #define OUT 1
@@ -18,16 +19,14 @@
 #define UPLOAD 32
 
 //#define STATE_DISCOVERED  //1
-#define STATE_NONE  10  //2
-#define STATE_WAIT  11  //2
-#define STATE_DONE  12  //3
-#define STATE_READY 13  //4
-#define STATE_ERROR 14  //4
-
-#define CGI_STATE_INIT 	 1
-#define CGI_STATE_CALLED 2
-#define CGI_STATE_DONE   3
-#define CGI_STATE_ERROR  4
+#define STATE_NONE  		  10  //2
+#define STATE_WAIT  		  11  //2
+#define STATE_INFC_CREATED    12  //3
+#define STATE_INFC_PROCESSING 13  //3
+#define STATE_DONE  		  14  //3
+#define STATE_READY 		  15  //4
+#define STATE_ERROR 		  16  //4
+#define STATE_WAIT_PROC 	  17  //4
 
 class CgiPipe;
 
@@ -52,11 +51,13 @@ class HttpResponse : public HttpParser {
 	std::string			response;
 	std::string			response_body; // * temp var for body
 	std::vector<BYTE>	response_buffer;
+//	std::vector<BYTE>	cgi_resp_buffer;
 	std::string			file_type; // * file type for CGI
 	int 				fd;	// * for reading file only
 	int					pid;
 	unsigned int		type;
 	unsigned int		resp_state;
+	bool				cgi_proc_exited;
 
 	std::vector<BYTE> & get_response_buffer() {
 		return response_buffer;
@@ -113,11 +114,14 @@ class HttpResponse : public HttpParser {
 	}
 	int wait_process() {
 		int status;
-		int ret =  waitpid(pid, &status, WNOHANG) < 0;
-		if ( ret < 0
+		int ret = waitpid(pid, &status, WNOHANG);
+		std::cout << YELLOW"ret waitpid=" << ret<< RESET;
+		if ( ret != 0
 		||  (WIFEXITED(status) && WEXITSTATUS(status) > 0)
-		||  WIFSIGNALED(status))
+		||  WIFSIGNALED(status)) {
+			cgi_proc_exited = true;
 			return ERROR;
+		}
 		return SUCCESS;
 	}
 
@@ -135,21 +139,56 @@ class HttpResponse : public HttpParser {
 			resp_state = STATE_READY;
 			return 1;
 		}
-		if ( type & (CGI | UPLOAD) ) {
-//			log(BLUE"response CGI | UPLOAD "RESET, get_state_type_str());
+		if ( type & UPLOAD ) {
 			if ( resp_state < STATE_DONE )
 				return 0;
 			if ( resp_state == STATE_DONE ) {
-				if ( wait_process() == ERROR ) {
-					setCode(HttpStatus::InternalServerError, "cgi fail");
-//					response_body.clear();
-					return 0;
-				}
+//				if ( wait_process() == ERROR ) {
+//					setCode(HttpStatus::InternalServerError, "cgi fail");
+////					response_body.clear();
+//					return 0;
+//				}
 				length = response_body.size();
 				fill_buffer_to_send();
 				resp_state = STATE_READY;
 			}
-			return 1;
+			return response_buffer.size();
+		}
+		if ( type & CGI ) {
+			if ( resp_state <= STATE_WAIT )
+				return 0;
+			if ( resp_state == STATE_INFC_CREATED ) {
+				fill_buffer_to_send();
+				resp_state = STATE_INFC_PROCESSING;
+			}
+
+//			setCode(HttpStatus::OK);
+//			if ( wait_process() == ERROR && resp_state ) {
+//				setCode(HttpStatus::InternalServerError, "cgi fail");
+////					response_body.clear();
+//				return 0;
+//			}
+
+//			log(BLUE"response CGI | UPLOAD "RESET, get_state_type_str());
+//			return 1;
+//			if ( resp_state < STATE_DONE )
+//				return 0;
+			wait_process();
+			if ( resp_state == STATE_DONE && cgi_proc_exited ) {
+				/* state DONE - waiting of pipe. */
+				log("<<<<<<<<<<<<<<<<");
+				resp_state = STATE_READY;
+//				if ( wait_process() == ERROR ) {
+//					setCode(HttpStatus::InternalServerError, "cgi fail");
+////					response_body.clear();
+//					return 0;
+//				}
+//				length = response_body.size();
+//				fill_buffer_to_send();
+//				resp_state = STATE_READY;
+//				resp_state = STATE_WAIT_PROC;
+			}
+			return response_buffer.size();
 		}
 		if ( type & FILE ) {
 			log(BLUE"response FILE "RESET, get_state_type_str());
@@ -178,7 +217,9 @@ class HttpResponse : public HttpParser {
 	bool completed() const {
 //		log("buffer: ", buffer.size());
 //		log("state=", state);
-		return resp_state >= STATE_READY && response_buffer.empty();
+//		if ( (type & CGI) &&  )
+//		std::cout << "\r\t\t\t\t\t\t\tresp state=" << resp_state;
+		return resp_state == STATE_READY && response_buffer.empty();
 //		if ( cgi_state >= CGI_STATE_DONE )
 //			return true;
 //		if ( file_state ) {
@@ -272,13 +313,26 @@ class HttpResponse : public HttpParser {
 		return itoa(code) + " " + HttpStatus::reasonPhrase(code);
 	}
 	void add_status_line() {
+		if ( !protocol.size() )
+			protocol = "HTTP";
+		if ( !version.size() )
+			version = "1.1";
 		response = protocol + "/" + version + " " + get_response_status() + "\r\n";
 	}
 	void add_headers() {
-		response += "Date: Mon, 27 Jul 2009 12:28:53 GMT\r\n";
+		const std::time_t now = std::time(nullptr);
+		char buf[64];
+
+		if (strftime(buf, sizeof buf, "%a, %e %b %Y %H:%M:%S GMT", std::gmtime(&now))) {
+//			std::cout << std::setw(40) << "    strftime %a %b %e %H:%M:%S %Y" << buf;
+			response += "Date: " + std::string(buf) + "\r\n";
+		}
+
+//		response += "Date: Mon, 27 Jul 2009 12:28:53 GMT\r\n";
 //		size_t body_size = response_body.size();
 //		if ( length )
-		response += "Content-Length: " + itoa(length) +"\r\n";
+		if ( type != CGI )
+			response += "Content-Length: " + itoa(length) +"\r\n";
 //		response += "Content-Type: text/html\r\n";
 		//response += "Connection: close\r\n";
 		response += "Server: tonypony web server\r\n";
@@ -342,6 +396,7 @@ class HttpResponse : public HttpParser {
 		length = 0; // initialization
 		type = 0;
 		resp_state = STATE_NONE;
+		cgi_proc_exited = false;
 		if ( !code ) {
 			if ( (method == "GET" || method == "DELETE")  && search_file() == EXIT_FAILURE ) {
 				setCode(HttpStatus::NotFound, "file not found");
@@ -433,7 +488,7 @@ class HttpResponse : public HttpParser {
 	std::vector<std::string> create_cgi_args() {
 		std::vector<std::string> args;
 		std::string path(server_ptr->root + target);
-		std::string			executable;
+//		std::string			executable;
 		if (file_type == "py") {
 			args.push_back("python3");
 			args.push_back(path);
@@ -471,6 +526,7 @@ class HttpResponse : public HttpParser {
 
 		if (pipe(fdin) != 0 || pipe(fdout) != 0) {
 			std::cerr << "Cannot create CGI pipe";
+			setCode(HttpStatus::InternalServerError, "cgi fail");
 			return ERROR;
 		}
 
@@ -479,13 +535,19 @@ class HttpResponse : public HttpParser {
 		int fdOldStdOut = dup(fileno(stdout));
 
 		// Duplicate end of pipe to stdout and stdin file descriptors
-		if ((dup2(fdout[OUT], fileno(stdout)) == -1) || (dup2(fdin[IN], fileno(stdin)) == -1))
+		if ((dup2(fdout[OUT], fileno(stdout)) == -1) || (dup2(fdin[IN], fileno(stdin)) == -1)) {
+			setCode(HttpStatus::InternalServerError, "cgi fail");
 			return ERROR;
+		}
 		// Close original end of pipe
 		close(fdin[IN]);
 		close(fdout[OUT]);
 
 		pid = spawn_process(create_cgi_args());
+		if ( pid < 0 ) {
+			setCode(HttpStatus::InternalServerError, "cgi fail");
+			return ERROR;
+		}
 
 		// Duplicate copy of original stdin an stdout back into stdout
 		dup2(fdOldStdIn, fileno(stdin));
@@ -497,6 +559,7 @@ class HttpResponse : public HttpParser {
 
 		//Отдаем тело запроса дочернему процессу
 //		write(fdin[OUT], &request_buffer[0], request_buffer.size());
+		resp_state = STATE_INFC_CREATED;
 		return fdout[IN];
 
 	//	while (1)

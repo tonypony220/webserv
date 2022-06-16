@@ -1,5 +1,6 @@
 #pragma once
 #include <iostream>
+#include <stdio.h>
 #include <unistd.h>
 #include <sys/socket.h>
 #include "Request.hpp"
@@ -7,6 +8,7 @@
 #include "Response.hpp"
 #include "Server.hpp"
 #define LISTENING_SESSION 0 // zero stub for vector of FDs
+#define DEFAULT_REQUEST_TIMEOUT 4 // seconds
 //#define BUFF_SIZE 3
 //#define MORE 1
 
@@ -80,10 +82,15 @@ public:
 		}
 		if (rc < 0) {
 			log(RED"read pipe error: " , strerror(errno), RESET);
-			response_ptr->get_resp_state() = STATE_ERROR;
+			response_ptr->get_resp_state() = STATE_DONE;
+//			response_ptr->get_resp_state() = STATE_ERROR;
 			return ERROR;
 		}
-		response_ptr->get_response_body().append( buff );
+		response_ptr->get_response_buffer().insert(
+				response_ptr->get_response_buffer().end(),
+				buff,
+				buff + rc);
+//		response_ptr->get_response_body().append( buff );
 //		buffer.append( buff );
 		return SUCCESS;
 	}
@@ -144,8 +151,9 @@ class tcpSession : public IOInterface {
 	unsigned int 			  current_response;
 //	std::string 			  buffer;
 	std::vector<char> 		  buffer;
+	std::time_t 			  start; // = std::time(nullptr);
 
-  public:
+public:
 	std::string 			  ip;
 
 	tcpSession(int fd, Server * serv)
@@ -153,6 +161,7 @@ class tcpSession : public IOInterface {
 		current_response(0),
 		current_request(0) {
 		add_request();
+		start = std::time(nullptr);
 		log("tcpSession created, fd: ", fd); //fd &&
 	}
 	~tcpSession() { 
@@ -204,6 +213,22 @@ class tcpSession : public IOInterface {
 			if (ret == ERROR)
 				return ERROR;
 		}
+		std::cout.precision(40);
+//		std::cout << "difftime" << difftime( time(nullptr), start ) << std::endl;
+//		printf("%.f seconds have passed since the beginning of the month.\n", difftime( time(nullptr), start ));
+		if (difftime( time(nullptr), start ) > DEFAULT_REQUEST_TIMEOUT) {
+			requests[current_request].setCode(HttpStatus::RequestTimeout, "timeout");
+		}
+		// TODO
+		if (requests[current_request].isComplete()) {
+			HttpResponse resp = HttpResponse(requests[current_request]);
+			std::cout << resp << std::endl;
+			responses.push_back(resp);
+		}
+//		if (requests[current_request].isComplete() && !buffer.empty()) {
+//			add_request();
+//			current_request++;
+//		}
 //		log("\tresponses=", responses.size());
 		if ( !responses.empty() ) {
 //			responses[current_response].();
@@ -213,7 +238,7 @@ class tcpSession : public IOInterface {
 			}
 			if (responses[current_response].ready_to_write()) {// && (event & POLLOUT) ) { // TCP buffer have space to write to
 				std::cout << "\r\t\t\t\t\t\t\t\t\t\tsession writing..." << fd;
-				ret = writeSocket();
+				ret = writeSocket(); // not returns END !
 				if (ret == ERROR)
 					return ERROR;
 //				if (ret == END && responses[current_response].completed()) // TODO next response
@@ -221,7 +246,10 @@ class tcpSession : public IOInterface {
 			}
 			if ( responses[current_response].completed() ) {
 				//127.0.0.1 - - [13/Jun/2022:19:19:54 +0300] "GET /file HTTP/1.1" 200 0 "-" "curl/7.54.0"
-				std::cout << GREEN << ip << " - "
+				const std::time_t now = std::time(nullptr);
+				char buf[64];
+				strftime(buf, sizeof buf, "[%e/%b/%Y:%H:%M:%S %z]", std::localtime(&now));
+				std::cout << GREEN << ip << " - " << buf
 				<< responses[current_response].start_line
 				<< "  "
 				<< responses[current_response].short_log_line()
@@ -265,19 +293,11 @@ class tcpSession : public IOInterface {
 			log(RED"read socket error: ",strerror(errno),RESET);
 			return ERROR;
 		}
+		start = std::time(nullptr);
 		buffer.insert(buffer.end(), buff, buff + rc);
 //		buffer.append( buff );
 		requests[current_request].parseInput( buffer );
 
-		if (requests[current_request].isComplete()) {
-			HttpResponse resp = HttpResponse(requests[current_request]);
-			std::cout << resp << std::endl;
-			responses.push_back(resp);
-		}
-		if (requests[current_request].isComplete() && !buffer.empty()) {
-			add_request();
-			current_request++;
-		}
 		return SUCCESS;
 	}
 

@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <unistd.h>
 #include <vector>
+#include <ctime>
 #include <map>
 using namespace std;
 int main () {
@@ -13,7 +14,7 @@ int main () {
 	v.insert(v.end(), buff, buff + 40);
 	v.insert(v.end(), buff, buff + 40);
 	v.erase(v.begin(), v.begin()+40);
-	cout << v.size();
+//	cout << v.size();
 	string s;
 	/* int size = 400000; */
 	/* s.resize(size); */
@@ -30,10 +31,20 @@ int main () {
 //		std::cout << "Your PATH is: " << env_p << '\n';
 
 
-	const char *args[3] = {"python3",
-						   "/Users/mehtel/coding/webserv/py.py",
-										  0};
-	execvp(args[0], (char* const*)args);
-	perror("");
+//	const char *args[3] = {"python3",
+//						   "/Users/mehtel/coding/webserv/py.py",
+//										  0};
+//	execvp(args[0], (char* const*)args);
+//	perror("");
 
+	const std::time_t now = std::time(nullptr);
+	char buf[64];
+	if (strftime(buf, sizeof buf, "%a, %e %b %Y %H:%M:%S GMT\n", std::gmtime(&now))) {
+//			std::cout << std::setw(40) << "    strftime %a %b %e %H:%M:%S %Y" << buf;
+//		response += "Date: Mon, 27 Jul 2009 12:28:53 GMT\r\n";
+		cout << "Mon, 27 Jul 2009 12:28:53 GMT\n";
+		std::string a(buf) ;
+		cout << a;
+	} else
+		cout << "err";
 }

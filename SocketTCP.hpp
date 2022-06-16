@@ -1,4 +1,5 @@
 #pragma once
+#include <chrono>
 #include <iostream>
 #include <sys/socket.h>
 #include <cerrno>
@@ -20,7 +21,9 @@ class SocketTCP {
 		std::string buff;
 
 	public:
-		SocketTCP(int port = 80 ) : port(port) {}
+		SocketTCP(int port = 80 ) : port(port) {
+			std::chrono::time_point<std::chrono::high_resolution_clock> t_start;
+		}
 		~SocketTCP() {}
 		/* it's should not be copyable but it's better than use pointers */
 		SocketTCP( const SocketTCP & copy ) { *this = copy; }
