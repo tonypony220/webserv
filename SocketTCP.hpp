@@ -22,7 +22,7 @@ class SocketTCP {
 
 	public:
 		SocketTCP(int port = 80 ) : port(port) {
-			std::chrono::time_point<std::chrono::high_resolution_clock> t_start;
+//			std::chrono::time_point<std::chrono::high_resolution_clock> t_start;
 		}
 		~SocketTCP() {}
 		/* it's should not be copyable but it's better than use pointers */

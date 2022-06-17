@@ -173,17 +173,22 @@ int loop (Server & serv) {
 }
 
 int main() {
-	std::unordered_map<int, int> d;
-	std::vector<int> ports; 
-	ports.push_back(2002);
-	ports.push_back(2001);
-	Server serv(ports, "/Users/mehtel/coding/webserv");
-	serv.enable_cgi("py");
-	serv.enable_cgi("sh");
-	serv.enable_cgi("cgi");
+//	std::unordered_map<int, int> d;
+//	std::vector<int> ports;
+//	ports.push_back(2002);
+//	ports.push_back(2001);
+//	Server_config config(ports, "/Users/mehtel/coding/webserv");
+	Server_config config;
+	config.add_port(2001);
+	config.add_port(2002);
+	config.error_pages_path="/Users/mehtel/coding/webserv/err_pages";
+	config.enable_cgi("py");
+	config.enable_cgi("sh");
+	config.enable_cgi("cgi");
 	/* sockets.push_back(SocketTCP(2002)); */
 	/* sockets.push_back(SocketTCP(2001)); */
-
+	Server serv;
+	serv.add_config(config);
 //	sockets.push_back(sock);
 	loop(serv);
 }

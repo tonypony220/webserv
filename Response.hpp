@@ -17,6 +17,7 @@
 #define GENERIC 8
 #define HTML 16
 #define UPLOAD 32
+#define FILE_ERROR 64
 
 //#define STATE_DISCOVERED  //1
 #define STATE_NONE  		  10  //2
@@ -37,6 +38,7 @@ class HttpResponse : public HttpParser {
 	HttpResponse(const HttpParser & copy) : HttpParser(copy) {
 		verbose && std::cout << "HttpResponse created"  << std::endl;
 		init_response();
+		server_ptr->match_config();
 	}
 	HttpResponse( const HttpResponse & copy ) : HttpParser(copy) { *this = copy; }
 	~HttpResponse( void ) { verbose && std::cout << "HttpResponse destructed, fd: "  << std::endl; }
@@ -48,6 +50,7 @@ class HttpResponse : public HttpParser {
 ///		}
 	// 1. store headers.
 	// 2. store ready full response text
+	Server_config		*config;
 	std::string			response;
 	std::string			response_body; // * temp var for body
 	std::vector<BYTE>	response_buffer;
@@ -115,7 +118,7 @@ class HttpResponse : public HttpParser {
 	int wait_process() {
 		int status;
 		int ret = waitpid(pid, &status, WNOHANG);
-		std::cout << YELLOW"ret waitpid=" << ret<< RESET;
+		std::cout << YELLOW"\rret waitpid=" << ret<< RESET;
 		if ( ret != 0
 		||  (WIFEXITED(status) && WEXITSTATUS(status) > 0)
 		||  WIFSIGNALED(status)) {
@@ -123,6 +126,18 @@ class HttpResponse : public HttpParser {
 			return ERROR;
 		}
 		return SUCCESS;
+	}
+	int error_page_exists() {
+		std::string err_path = 	server_ptr->error_pages_path + "/"
+								+ itoa(code) + ".html";
+		struct stat s;
+		bool exists = stat( err_path.c_str(), &s ) == EXIT_SUCCESS;
+		log("error page exists ", err_path, exists);
+		if (exists) {
+			length = s.st_size;
+			open_file_to_read(err_path);
+		}
+		return exists;
 	}
 
 	int ready_to_write() {
@@ -132,9 +147,15 @@ class HttpResponse : public HttpParser {
 		}
 		if (!code)
 			setCode(HttpStatus::OK);
-		if ( code > 300 ) {
+		if ( code > 300 && !(type & FILE_ERROR) ) {
 			log(BLUE"response error READY "RESET, get_state_type_str());
+			if ( server_ptr->error_pages_path.size() && error_page_exists()) {
+				type = FILE | HTML | FILE_ERROR;
+				return 0;
+			}
+//			} else {
 			generate_response_body();
+//			}
 			fill_buffer_to_send();
 			resp_state = STATE_READY;
 			return 1;
@@ -387,6 +408,13 @@ class HttpResponse : public HttpParser {
 	//	log(GREEN"file saved", RESET);
 		return SUCCESS;
 	}
+	void open_file_to_read(std::string & file) {
+		fd = open(file.c_str(), O_RDONLY | O_NONBLOCK);
+		if ( fd < 0 ) {
+			log(RED"read file open error: ", strerror(errno),RESET);
+			setCode(HttpStatus::InternalServerError, "open failed");
+		}
+	}
 
 	void init_response() {
 		// starting response creating
@@ -406,14 +434,24 @@ class HttpResponse : public HttpParser {
 			else if ( method == "GET" && ( type & FILE ))
 			{
 				get_path_from_target();
-				fd = open(target.c_str(), O_RDONLY | O_NONBLOCK);
-				if ( fd < 0 ) {
-					log(RED"read file open error: ", strerror(errno),RESET);
-					setCode(HttpStatus::InternalServerError, "open failed");
-				}
+				open_file_to_read(target);
+//				fd = open(target.c_str(), O_RDONLY | O_NONBLOCK);
+//				if ( fd < 0 ) {
+//					log(RED"read file open error: ", strerror(errno),RESET);
+//					setCode(HttpStatus::InternalServerError, "open failed");
+//				}
 			}
 			else if ( method == "DELETE" ) { // TODO
 				// unlink
+				get_path_from_target();
+				int ret = unlink(target.c_str());
+				if ( ret != 0 )
+					setCode(HttpStatus::InternalServerError, "delete failed");
+				else {
+					setCode(HttpStatus::NoContent);
+					fill_buffer_to_send();
+					resp_state = STATE_READY;
+				}
 			}
 			else if (method == "POST" || method == "PUT")
 			{ // TODO
@@ -462,8 +500,6 @@ class HttpResponse : public HttpParser {
 //			log("\t*", string_args[i]);
 			args.push_back(string_args[i].c_str());
 		}
-		if (const char* env_p = std::getenv("QUERY_STRING"))
-			std::cout << "Your QUERY_STRING is: " << env_p << '\n';
 		args.push_back(0);
 
 		int pid = fork();
@@ -482,8 +518,15 @@ class HttpResponse : public HttpParser {
 		return pid;
 	}
 	void set_environ_for_cgi() {
+		log(YELLOW"setting environ"RESET);
 		setenv("QUERY_STRING", query_string.c_str(), 1);
+		setenv("REQUEST_METHOD", method.c_str(), 1);
 		setenv("PATH_INFO", (server_ptr->root + target).c_str(), 1);
+//		if (const char* env_p = std::getenv("QUERY_STRING"))
+//			std::cout << "Your QUERY_STRING is: " << env_p << '\n';
+//		else
+//			std::cout << "no QUERY_STRING is: "  << '\n';
+
 	}
 	std::vector<std::string> create_cgi_args() {
 		std::vector<std::string> args;
@@ -495,7 +538,6 @@ class HttpResponse : public HttpParser {
 		}
 		else if (file_type == "cgi" || file_type == "sh")
 			args.push_back("./" + path);
-
 //			executable = "./" + target;
 
 //		std::string exec_name("python3");
@@ -520,6 +562,7 @@ class HttpResponse : public HttpParser {
 //		std::string path(server_ptr->root + target);
 //		const char *pszChildProcessArgs[3] = {"python3",
 //											  path.c_str(),
+		set_environ_for_cgi();
 //											  0};
 		int fdin[2], fdout[2];
 		//fdin[0] = fdin[1] = fdout[0] = fdout[1] = -1;

@@ -110,7 +110,7 @@ public:
 
 class File : public IOInterface {
 public:
-	HttpResponse *	response_ptr;
+	HttpResponse *	response_ptr; /* not protected from closing */
 
 	File(int fd, HttpResponse * resp)
 		: IOInterface(fd, NULL), response_ptr(resp) {
@@ -224,6 +224,8 @@ public:
 			HttpResponse resp = HttpResponse(requests[current_request]);
 			std::cout << resp << std::endl;
 			responses.push_back(resp);
+			add_request();
+			current_request++;
 		}
 //		if (requests[current_request].isComplete() && !buffer.empty()) {
 //			add_request();
@@ -249,7 +251,7 @@ public:
 				const std::time_t now = std::time(nullptr);
 				char buf[64];
 				strftime(buf, sizeof buf, "[%e/%b/%Y:%H:%M:%S %z]", std::localtime(&now));
-				std::cout << GREEN << ip << " - " << buf
+				std::cout << "\n"GREEN << ip << " - " << buf
 				<< responses[current_response].start_line
 				<< "  "
 				<< responses[current_response].short_log_line()
