@@ -38,6 +38,7 @@ public:
 //	std::string		buffer;
 	/* int fd_in; */
 	/* int fd_out; */
+	HttpResponse * response_ptr;
 
 	CgiPipe(int fd, HttpResponse * resp) 
 		: IOInterface(fd, NULL), response_ptr(resp) {

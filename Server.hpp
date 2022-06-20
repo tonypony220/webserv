@@ -1,12 +1,34 @@
 #pragma once
 #include "Session.hpp"
 #include "SocketTCP.hpp"
+//#include "Request.hpp"
 #include <algorithm>
 #include <map>
 #include <vector>
 #include <algorithm>
 #include <set>
+#include <sys/stat.h>
 
+bool valid_dir_path(std::string path) {
+	struct stat s;
+	if( stat( path.c_str(), &s ) == EXIT_SUCCESS && (s.st_mode & S_IFDIR ))
+		return true;
+	return false;
+}
+//bool vars_correct(std::vector<std::string> & vars, std::string *refs[]) {
+//	std::set<std::string> r(std::begin(refs), std::end(refs));
+//	size_t sz(r.size());
+//	r.insert(vars.begin(), vars.end());
+//	return sz == r.size();
+//}
+bool vars_correct(std::vector<std::string> & vars,
+				  std::string * begin,
+				  std::string * end) {
+	std::set<std::string> r(begin, end);
+	size_t sz(r.size());
+	r.insert(vars.begin(), vars.end());
+	return sz == r.size();
+}
 //std::map<std::string, std::string> execs = {std::make_pair(".py", "python3")};
 struct Location {
 	std::string				 route;
@@ -16,8 +38,40 @@ struct Location {
 	std::vector<std::string> cgi_extensions;
 	std::vector<std::string> allowed_methods;
 
-	void allow(std::string) {
-
+	void display(std::ostream & o) {
+		o << "\tLocations: " << "\n";
+		o << "\t\troute: " << route << "\n";
+		if (root.size())
+		o << "\t\troot: " << root << "\n";
+		if (redirect_uri.size())
+		o << "\t\tredirect: " << redirect_uri << "\n";
+		o << "\t\tautoindex: " << dir_listing << "\n";
+		if (cgi_extensions.size()) {
+			o << "\t\tcgi's: ";
+			p(cgi_extensions);
+			o << "\n";
+		}
+		o << "\t\tmethods: ";
+		p(allowed_methods);
+		o << "\n";
+	}
+	void validate(std::stringstream & err) {
+		if (root.size() && !valid_dir_path(root)) {
+			err << "bad root: " << root << " " << strerror(errno);
+//			return;
+		}
+		if (!vars_correct(allowed_methods,
+						  std::begin(HttpMethodsImplemented),
+						  std::end(HttpMethodsImplemented))) {
+			err << "bad methods "<< "\n";
+//			return;
+		}
+		if (!vars_correct(cgi_extensions,
+						  std::begin(cgi_extensions_supported),
+						  std::end(cgi_extensions_supported))) {
+			err << "bad cgi: " << "\n";
+//			return;
+		}
 	}
 
 	bool method_allowed(std::string & method) {
@@ -40,18 +94,45 @@ struct Location {
 		return false;
 
 	}
+	void clear() {
+		route.clear();
+		root.clear();
+		redirect_uri.clear();
+		dir_listing = false;
+		cgi_extensions.clear();
+		allowed_methods.clear();
+	}
 };
+std::ostream & operator<<( std::ostream & o, Location & s ) {
+	s.display(o);
+	return ( o );
+}
 
 class Server_config {
 public:
 	std::string 				root;  // required field
-//	std::string 				server_name;
 	std::vector<std::string> 	server_names;
 	std::string 				error_pages_path;
 	std::vector<int> 			ports;
 	std::vector<Location>		locs;
 	size_t						max_size;
 	bool						enable_session;
+
+	void display(std::ostream & o) {
+		o << "Server Config: " << "\n";
+		o << "\troot: " << root << "\n";
+		o << "\terror pages path: " << root << "\n";
+		o << "\tmax size: " << max_size << "\n";
+		o << "\tenable sessions: " << enable_session << "\n";
+		o << "\tserver names: ";
+		p(server_names);
+		o << "\n";
+		o << "\tports: ";
+		p(ports);
+		o << "\n";
+		o << "\tLocations:";
+		p(locs);
+	}
 
 	std::map<std::string, std::string> execs; // ?
 	//        location     path
@@ -69,13 +150,16 @@ public:
 			}
 		}
 		if (max) {
-			target.erase(0, locs[idx].size())
+			target.erase(0, locs[idx].route.size());
 			std::string r = locs[idx].root.size() ? locs[idx].root : root;
-			target.insert(0, r.begin(), r.end());
+			target.insert(target.begin(), r.begin(), r.end());
 			return &locs[idx];
 		}
 		return nullptr;
 
+	}
+	bool server_name_in_config_names(std::string & name) {
+		return easyfind(server_names, name);
 	}
 
 	void add_port(int port) {
@@ -90,26 +174,33 @@ public:
 		max_size = 0;
 		enable_session = false;
 	}
-
-
 };
+
+std::ostream & operator<<( std::ostream & o, Server_config & s ) {
+	s.display(o);
+	return ( o );
+}
+
+
 template <class T>
 bool intersects(std::vector<T> a, std::vector<T> b ) {
 	std::set<T> s;
 	s.insert(a.begin(), a.end());
 	s.insert(b.begin(), b.end());
 	if (s.size() != a.size() + b.size())
-		return true
+		return true;
 	return false;
 }
 
 class Server {
 public:
-	std::vector<Server_config> 	configs;
-	std::vector<SocketTCP> 		sockets;
-	std::set<int> 				ports;
-	std::string 				app_name;
-	std::map<int, std::vector<*Server_config> >  mapping;
+	std::vector<Server_config> 					 configs;
+	std::vector<SocketTCP> 						 sockets;
+	std::set<int> 								 ports;
+	std::string 								 app_name;
+	std::map<int, std::vector<Server_config*> >  mapping;
+
+	std::stringstream err;
 
 	bool configs_intersects(Server_config & new_config) {
 		for (int i=0; i < configs.size(); i++) {
@@ -125,42 +216,53 @@ public:
 	}
 
 	Server_config * match_config(std::string name, int port) {
-		std::vector<*Server_config> configs = mapping[port];
-		size_t i=configs.size();
+		std::vector<Server_config*> configs = mapping[port];
+		size_t i = configs.size();
 		for (; i >= 0; i--) {
-			if (configs[i]->server_name == name)
+			if (configs[i]->server_name_in_config_names(name))
 				return configs[i];
 		}
 		return configs[i];
 	}
+	void validate_config(Server_config & config) {
+		if (ok() && config.root.empty())
+			err << "root required";
+		if (ok() && !valid_dir_path(config.root))
+			err << "bad root: " << config.root << " " << strerror(errno);
+		for (int i = 0; i < config.locs.size() && ok(); i++) {
+			config.locs[i].validate(err);
+		}
+	}
+	bool ok() { return !err.rdbuf()->in_avail(); }
+
+	int error() {
+		std::cerr << RED << "config error: " << err.rdbuf() << RESET"\n";
+		return ERROR;
+	}
 
 	int add_config(Server_config & config) {
-		if ( configs_intersects(config) )
-			return ERROR;
+		validate_config(config);
+		if (!ok())
+			return error();
+		if ( configs_intersects(config) ) {
+			err << RED"config error: server names conflict\n"RESET;
+			return error();
+		}
 		configs.push_back(config);
 		// to map pointer on objs in this vector
 		Server_config * conf = &configs.back();
 		for ( int i=0; i<config.ports.size(); i++ ) {
 			int port = config.ports[i];
-//			if ( configs_intersects(port, config.server_names) )
-//				return ERROR;
 			if ( ports.insert(port).second )
 //			if ( ports.find(port) == ports.end() )
-				sockets.push_back(SocketTCP(port));
+				sockets.push_back( SocketTCP(port) );
 			mapping[port].push_back(conf);
 		}
 		return SUCCESS;
 	}
 	void set_server_name(std::string & name) { app_name = name; }
 
-	Server( std::vector<int> & ports, std::string root_path)
-			: root(root_path), app_name("pony server") {
-		for (int i = 0; i < ports.size(); i++)
-			sockets.push_back(SocketTCP(ports[i]));
-//		execs[".py"] = "python3";
-//		execs[".cgi"] = "./";
-//		execs.insert(std::make_pair(".py", "python3"));
-	}
+	Server() :app_name("pony server") {}
 	~Server() {}
 	//Server( const Server & copy ) { *this = copy; }
 	//Server & operator=( const Server & other ) {}

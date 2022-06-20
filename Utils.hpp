@@ -5,20 +5,37 @@
 #include <cmath>
 #include <vector>
 #include <algorithm>
-# define RED 	 "\033[1;31m"
-# define GREEN   "\033[0;32m"
-# define YELLOW	 "\033[1;33m"
-# define BLUE	 "\033[1;34m"
-# define PURPLE  "\033[1;35m"
-# define CYAN    "\033[1;36m"
-# define RESET   "\033[0;0m"
-# define BOLD    "\033[;1m"
-# define REVERSE "\033[;7m"
+#define ERROR 	  		-1
+#define SUCCESS 		 0
+#define END 			 1
+#define RED 	 "\033[1;31m"
+#define GREEN   "\033[0;32m"
+#define YELLOW	 "\033[1;33m"
+#define BLUE	 "\033[1;34m"
+#define PURPLE  "\033[1;35m"
+#define CYAN    "\033[1;36m"
+#define RESET   "\033[0;0m"
+#define BOLD    "\033[;1m"
+#define REVERSE "\033[;7m"
 #define VERBOSE
+
+std::string cgi_extensions_supported[] = {"cgi", "py", "sh"};
+std::string HttpMethods[] = {"GET", "POST", "PUT", "CONNECT", "DELETE", "OPTIONS", "TRACE"};
+std::string HttpMethodsImplemented[] = {"GET", "POST", "DELETE", "PUT" };
+template <class T, class Val>
+bool easyfind (T & iterable, Val val, size_t * idx = nullptr) {
+	typename T::iterator found = find( iterable.begin(), iterable.end(), val );
+	if (found != iterable.end()) {
+		if (idx)
+			*idx = found - iterable.begin();
+		return true;
+	}
+	return false;
+}
 
 template <typename T>
 void p(T a) {
-	std::cout << "data: ";
+//	std::cout << "data: ";
 	for (typename T::iterator i = a.begin(); i != a.end(); i++)  {
 			std::cout << "(" << *i << ") ";
 	}

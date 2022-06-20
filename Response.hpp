@@ -384,18 +384,18 @@ class HttpResponse : public HttpParser {
 //		}
 	}
 	void match_config_and_location() {
-		std::string host(headers['host']);
+		std::string host(headers["host"]);
 		std::string::size_type pos(host.find(":"));
-		config = server_ptr->match_config(host.substr(0, pos),
-										  atoi(host.substr(
-												  pos + 1, host.size()))
+		config = server_ptr->match_config(
+				host.substr(0, pos),
+				atoi(host.substr(pos + 1, host.size()).c_str())
 		);
 		path = target;
 		location = config->route_target_path(path);
 		path.erase(0, 1);
 		if (!location->method_allowed(method))
 			setCode(HttpStatus::MethodNotAllowed, "not allowed");
-		if (!location->redirect_uri)
+		if (location->redirect_uri.size())
 			setCode(HttpStatus::TemporaryRedirect, "redirect");
 	}
 	int create_file() {
@@ -460,7 +460,7 @@ class HttpResponse : public HttpParser {
 			}
 			else if ( method == "DELETE" ) { // TODO
 				// unlink
-				get_path_from_target();
+//				get_path_from_target();
 				int ret = unlink(target.c_str());
 				if ( ret != 0 )
 					setCode(HttpStatus::InternalServerError, "delete failed");

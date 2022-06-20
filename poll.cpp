@@ -2,7 +2,8 @@
 #include "Session.hpp"
 #include "SocketTCP.hpp"
 #include "SmartPtr.hpp"
-#include "Server.hpp"
+//#include "Server.hpp"
+#include "ParseConf.hpp"
 #include <vector>
 #include <unordered_map>
 #include <sys/socket.h>
@@ -173,22 +174,37 @@ int loop (Server & serv) {
 }
 
 int main() {
+
 	Server serv;
-	Server_config config;
-	config.root = "/Users/mehtel/coding/webserv/";
-	config.add_port(2001);
-	config.add_port(2002);
-	config.error_pages_path="/Users/mehtel/coding/webserv/err_pages";
+	ParserConfig parser("file");
+	if (parser.parse_file() == EXIT_FAILURE)
+		return 1;
 
-	Location loc1;
-	loc1.route = "/";
-	loc1.enable_cgi("py");
-	loc1.enable_cgi("sh");
-	loc1.enable_cgi("cgi");
-	loc1.allow("GET");
-	loc1.allow("POST");
-	loc1.allow("DELETE");
+	p(parser.configs);
+	std::cout << GREEN" end "RESET << parser.configs.size() << " \n";
 
-	serv.add_config(config);
-	loop(serv);
+	for ( size_t i = 0; i < parser.configs.size(); i++ ) {
+		if (serv.add_config(parser.configs[i])) {
+			return EXIT_FAILURE;
+		}
+	}
+
+//	Server_config config;
+//	config.root = "/Users/mehtel/coding/webserv/";
+//	config.add_port(2001);
+//	config.add_port(2002);
+//	config.error_pages_path="/Users/mehtel/coding/webserv/err_pages";
+//
+//	Location loc1;
+//	loc1.route = "/";
+//	loc1.enable_cgi("py");
+//	loc1.enable_cgi("sh");
+//	loc1.enable_cgi("cgi");
+//	loc1.allow("GET");
+//	loc1.allow("POST");
+//	loc1.allow("DELETE");
+//
+//	serv.add_config(config);
+//	loop(serv);
+	return EXIT_SUCCESS;
 }

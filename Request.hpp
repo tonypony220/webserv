@@ -17,14 +17,12 @@
 #define ADD_IFCE		 10
 #define HANDLE_FILE 	 11
 
-#define ERROR 	  		-1
-#define SUCCESS 		 0
-#define END 			 1
 #define CRLF "\r\n"
 #define BYTE char
 
-std::string HttpMethods[] = {"GET", "POST", "PUT", "CONNECT", "DELETE", "OPTIONS", "TRACE"};
-std::string HttpMethodsImplemented[] = {"GET", "POST", "DELETE", "PUT" };
+//class Server_config;
+//class Server;
+//class Location;
 /*  *** Examples *** :
 Client request:
 
@@ -296,18 +294,18 @@ class HttpParser {
 	}
 
 	void match_config_and_location() {
-		std::string host(headers['host']);
+		std::string host(headers["host"]);
 		std::string::size_type pos(host.find(":"));
 		config = server_ptr->match_config(host.substr(0, pos),
 										  atoi(host.substr(
-												  pos + 1, host.size()))
+												  pos + 1, host.size()).c_str())
 		);
 		path = target;
 		location = config->route_target_path(path);
 		path.erase(0, 1);
 		if (!location->method_allowed(method))
 			setCode(HttpStatus::MethodNotAllowed, "not allowed");
-		if (!location->redirect_uri)
+		if (location->redirect_uri.size())
 			setCode(HttpStatus::TemporaryRedirect, "redirect");
 	}
 
@@ -422,7 +420,7 @@ class HttpParser {
 		std::cout << "\rbody consuming, input buffer size=" << input.size();
 		std::cout << " len=" << length << " / buffsize=" << buffer.size()  << " - " << '\n';
 //		std::cout << " data: "CYAN << input << RESET << std::endl;
-		if (config->max_size && request_buffer.size > config->max_size ) {
+		if (config->max_size && request_buffer.size() > config->max_size ) {
 			setCode(HttpStatus::ContentTooLarge, "size > limit");
 			return END;
 		}
