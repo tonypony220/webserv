@@ -60,6 +60,7 @@ class HttpParser {
 
 	std::string 	method;
 	std::string 	target;
+	std::string		path;
 	std::string		query_string;
 	std::string 	version;
 	std::string 	protocol;
@@ -68,6 +69,8 @@ class HttpParser {
 	unsigned long 	counter;
 	size_t 			chunk_size; // current chunk size 
 	bool			chunk_size_parsed;
+	Server_config	*config;
+	Location		*location;
 
 	// maybe not good way to do it
 	typedef std::map< std::string, std::string >::iterator headerItor;
@@ -292,6 +295,22 @@ class HttpParser {
 		return SUCCESS;
 	}
 
+	void match_config_and_location() {
+		std::string host(headers['host']);
+		std::string::size_type pos(host.find(":"));
+		config = server_ptr->match_config(host.substr(0, pos),
+										  atoi(host.substr(
+												  pos + 1, host.size()))
+		);
+		path = target;
+		location = config->route_target_path(path);
+		path.erase(0, 1);
+		if (!location->method_allowed(method))
+			setCode(HttpStatus::MethodNotAllowed, "not allowed");
+		if (!location->redirect_uri)
+			setCode(HttpStatus::TemporaryRedirect, "redirect");
+	}
+
 	void validateHeaders() {
 		headerItor te = headers.find("transfer-encoding");
 		headerItor cl = headers.find("content-length");
@@ -318,6 +337,7 @@ class HttpParser {
 				transfer_encoding = "chunked"; 
 		} else 
 			length == 0 && setState(DONE); // TODO
+
 	}
 	int find_chunk_size( std::vector<BYTE> & input ) {
 		std::vector<BYTE>::iterator crlf = find_CRLF(input);
@@ -402,7 +422,10 @@ class HttpParser {
 		std::cout << "\rbody consuming, input buffer size=" << input.size();
 		std::cout << " len=" << length << " / buffsize=" << buffer.size()  << " - " << '\n';
 //		std::cout << " data: "CYAN << input << RESET << std::endl;
-
+		if (config->max_size && request_buffer.size > config->max_size ) {
+			setCode(HttpStatus::ContentTooLarge, "size > limit");
+			return END;
+		}
 		if ( !transfer_encoding.size() ) {
 			if ( request_buffer.size() + input.size() >= length ) {
 				request_buffer.insert(request_buffer.end(),
@@ -427,7 +450,7 @@ class HttpParser {
 			else if ( ret == ERROR ) 
 				setCode( HttpStatus::BadRequest, "err" );
 		}
-		return 0;
+		return SUCCESS;
 	}
 
 	void display(std::ostream & o) {

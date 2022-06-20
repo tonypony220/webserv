@@ -36,7 +36,6 @@ public:
 class CgiPipe : public IOInterface {
 public:
 //	std::string		buffer;
-	HttpResponse *	response_ptr;
 	/* int fd_in; */
 	/* int fd_out; */
 

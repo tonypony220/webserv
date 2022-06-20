@@ -67,9 +67,9 @@ int stop = 0;
 
 
 int loop (Server & serv) {
-	std::vector<struct pollfd>	fds;
+	std::vector<struct pollfd>			fds;
 	std::vector<sptr<IOInterface> > 	io_sessions;
-	struct pollfd				poll_fd;
+	struct pollfd						poll_fd;
 
 	int timeout = 1 * 1000; // 3 min (3 * 60 * 1000)
 
@@ -173,22 +173,22 @@ int loop (Server & serv) {
 }
 
 int main() {
-//	std::unordered_map<int, int> d;
-//	std::vector<int> ports;
-//	ports.push_back(2002);
-//	ports.push_back(2001);
-//	Server_config config(ports, "/Users/mehtel/coding/webserv");
+	Server serv;
 	Server_config config;
+	config.root = "/Users/mehtel/coding/webserv/";
 	config.add_port(2001);
 	config.add_port(2002);
 	config.error_pages_path="/Users/mehtel/coding/webserv/err_pages";
-	config.enable_cgi("py");
-	config.enable_cgi("sh");
-	config.enable_cgi("cgi");
-	/* sockets.push_back(SocketTCP(2002)); */
-	/* sockets.push_back(SocketTCP(2001)); */
-	Server serv;
+
+	Location loc1;
+	loc1.route = "/";
+	loc1.enable_cgi("py");
+	loc1.enable_cgi("sh");
+	loc1.enable_cgi("cgi");
+	loc1.allow("GET");
+	loc1.allow("POST");
+	loc1.allow("DELETE");
+
 	serv.add_config(config);
-//	sockets.push_back(sock);
 	loop(serv);
 }

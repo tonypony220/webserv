@@ -47,4 +47,8 @@ int main () {
 		cout << a;
 	} else
 		cout << "err";
+
+	int i = 12;
+	for (; i < 30; i++) ;
+	cout << "i=" << i;
 }

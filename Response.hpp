@@ -38,7 +38,6 @@ class HttpResponse : public HttpParser {
 	HttpResponse(const HttpParser & copy) : HttpParser(copy) {
 		verbose && std::cout << "HttpResponse created"  << std::endl;
 		init_response();
-		server_ptr->match_config();
 	}
 	HttpResponse( const HttpResponse & copy ) : HttpParser(copy) { *this = copy; }
 	~HttpResponse( void ) { verbose && std::cout << "HttpResponse destructed, fd: "  << std::endl; }
@@ -50,7 +49,6 @@ class HttpResponse : public HttpParser {
 ///		}
 	// 1. store headers.
 	// 2. store ready full response text
-	Server_config		*config;
 	std::string			response;
 	std::string			response_body; // * temp var for body
 	std::vector<BYTE>	response_buffer;
@@ -128,7 +126,7 @@ class HttpResponse : public HttpParser {
 		return SUCCESS;
 	}
 	int error_page_exists() {
-		std::string err_path = 	server_ptr->error_pages_path + "/"
+		std::string err_path = 	config->error_pages_path + "/"
 								+ itoa(code) + ".html";
 		struct stat s;
 		bool exists = stat( err_path.c_str(), &s ) == EXIT_SUCCESS;
@@ -149,7 +147,7 @@ class HttpResponse : public HttpParser {
 			setCode(HttpStatus::OK);
 		if ( code > 300 && !(type & FILE_ERROR) ) {
 			log(BLUE"response error READY "RESET, get_state_type_str());
-			if ( server_ptr->error_pages_path.size() && error_page_exists()) {
+			if ( config->error_pages_path.size() && error_page_exists()) {
 				type = FILE | HTML | FILE_ERROR;
 				return 0;
 			}
@@ -278,14 +276,14 @@ class HttpResponse : public HttpParser {
 
 	int search_file() {
 		// https://stackoverflow.com/questions/146924/how-can-i-tell-if-a-given-path-is-a-directory-or-a-file-c-c
-		std::string path(server_ptr->root + target);
+//		std::string path(target);
 		// realpath does not work
 		log("searching in: ", path);
 
 		struct stat s;
 		if( stat( path.c_str(), &s ) == EXIT_SUCCESS )
 		{
-		    if( s.st_mode & S_IFDIR && server_ptr->dir_listing) {
+		    if( s.st_mode & S_IFDIR && location->dir_listing) {
 				// TODO search for index.html?
 				type = GENERIC;
 				list_dir( path );
@@ -303,7 +301,7 @@ class HttpResponse : public HttpParser {
 						type = FILE | HTML;
 						return EXIT_SUCCESS;
 					}
-					if ( server_ptr->is_cgi_file_type(file_type) ) {
+					if ( location->is_cgi_file_type(file_type) ) {
 						log("file will be exec as cgi");
 						type = CGI;
 						return EXIT_SUCCESS;
@@ -354,9 +352,11 @@ class HttpResponse : public HttpParser {
 //		if ( length )
 		if ( type != CGI )
 			response += "Content-Length: " + itoa(length) +"\r\n";
+		if (code == HttpStatus::TemporaryRedirect)
+			response += "Location: " + location->redirect_uri +"\r\n";
 //		response += "Content-Type: text/html\r\n";
 		//response += "Connection: close\r\n";
-		response += "Server: tonypony web server\r\n";
+		response += "Server: "+server_ptr->app_name+"\r\n";
 		if ( file_type == "html" )
 			response += "Content-type: text/html\r\n";
 		if ( type != CGI ) {
@@ -383,11 +383,23 @@ class HttpResponse : public HttpParser {
 		length = response_body.size();
 //		}
 	}
-	void get_path_from_target() {
-		target.erase(0, 1);
+	void match_config_and_location() {
+		std::string host(headers['host']);
+		std::string::size_type pos(host.find(":"));
+		config = server_ptr->match_config(host.substr(0, pos),
+										  atoi(host.substr(
+												  pos + 1, host.size()))
+		);
+		path = target;
+		location = config->route_target_path(path);
+		path.erase(0, 1);
+		if (!location->method_allowed(method))
+			setCode(HttpStatus::MethodNotAllowed, "not allowed");
+		if (!location->redirect_uri)
+			setCode(HttpStatus::TemporaryRedirect, "redirect");
 	}
 	int create_file() {
-		fd = open(target.c_str(), O_WRONLY | O_NONBLOCK | O_CREAT | O_TRUNC ,  0400);
+		fd = open(path.c_str(), O_WRONLY | O_NONBLOCK | O_CREAT | O_TRUNC ,  0400);
 		if ( fd < 0 ) {
 			log(RED"creating file open error: ", strerror(errno),RESET);
 			setCode(HttpStatus::NotFound, "open failed");
@@ -396,8 +408,8 @@ class HttpResponse : public HttpParser {
 	}
 
 	int validate_path() {
-		get_path_from_target();
-		chmod(target.c_str(), S_IRUSR | S_IWUSR);
+//		get_path_from_target();
+		chmod(path.c_str(), S_IRUSR | S_IWUSR);
 	//	std::ofstream out( target );
 	//	if (!out) {
 	//		log(RED"file error: ", strerror(errno),RESET);
@@ -425,15 +437,20 @@ class HttpResponse : public HttpParser {
 		type = 0;
 		resp_state = STATE_NONE;
 		cgi_proc_exited = false;
+
+		// must search config even if code has been set cause error path
+		match_config_and_location();
 		if ( !code ) {
-			if ( (method == "GET" || method == "DELETE")  && search_file() == EXIT_FAILURE ) {
+
+			if ( (method == "GET" || method == "DELETE")
+			&& search_file() == EXIT_FAILURE ) {
 				setCode(HttpStatus::NotFound, "file not found");
 			} else if ( method == "GET" && type & CGI ) {
 //				get_path_from_target();
 			}
 			else if ( method == "GET" && ( type & FILE ))
 			{
-				get_path_from_target();
+//				get_path_from_target();
 				open_file_to_read(target);
 //				fd = open(target.c_str(), O_RDONLY | O_NONBLOCK);
 //				if ( fd < 0 ) {
@@ -521,7 +538,7 @@ class HttpResponse : public HttpParser {
 		log(YELLOW"setting environ"RESET);
 		setenv("QUERY_STRING", query_string.c_str(), 1);
 		setenv("REQUEST_METHOD", method.c_str(), 1);
-		setenv("PATH_INFO", (server_ptr->root + target).c_str(), 1);
+		setenv("PATH_INFO", (path).c_str(), 1);
 //		if (const char* env_p = std::getenv("QUERY_STRING"))
 //			std::cout << "Your QUERY_STRING is: " << env_p << '\n';
 //		else
@@ -530,7 +547,7 @@ class HttpResponse : public HttpParser {
 	}
 	std::vector<std::string> create_cgi_args() {
 		std::vector<std::string> args;
-		std::string path(server_ptr->root + target);
+//		std::string path(target);
 //		std::string			executable;
 		if (file_type == "py") {
 			args.push_back("python3");
