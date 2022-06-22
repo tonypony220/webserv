@@ -72,12 +72,12 @@ public:
 	}
 
 	void parse_location_block() {
-		std::cout << "\t\t* cur locatino token: " << token << "\n";
+//		std::cout << "\t\t* cur locatino token: " << token << "\n";
 //		std::string route = token;
 		while (iss) {
-			std::cout << "- - -cur locatino token: " << token << "\n";
+//			std::cout << "- - -cur locatino token: " << token << "\n";
 			if ( token == "}") {
-				log("- - location parsed");
+//				log("- - location parsed");
 				unset_state(LOCATION);
 				unset_state(LOCATION_BLOCK_OPENED);
 				config.locs.push_back(loc);
@@ -131,7 +131,7 @@ public:
 //				return EXIT_FAILURE;
 			}
 			else if (token == "}") {
-				log("- - server parsed");
+//				log("- - server parsed");
 				unset_state(SERVER_BLOCK_OPENED);
 				unset_state(SERVER);
 				configs.push_back(config);
@@ -194,6 +194,9 @@ public:
 //					return EXIT_FAILURE;
 			}
 		}
+		if (configs.empty())
+			err_msg << "no servers to be run";
+
 		if ( err_msg.rdbuf()->in_avail() ) {
 			std::cerr << RED << "config error: " << err_msg.rdbuf() << RESET"\n";
 			return EXIT_FAILURE;

@@ -205,6 +205,6 @@ int main() {
 //	loc1.allow("DELETE");
 //
 //	serv.add_config(config);
-//	loop(serv);
+	loop(serv);
 	return EXIT_SUCCESS;
 }

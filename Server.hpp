@@ -9,6 +9,13 @@
 #include <set>
 #include <sys/stat.h>
 
+
+void clear_path(std::string & path) {
+	size_t pos = path.find("//");
+	if (pos != std::string::npos)
+		path.erase(pos, 1);
+}
+
 bool valid_dir_path(std::string path) {
 	struct stat s;
 	if( stat( path.c_str(), &s ) == EXIT_SUCCESS && (s.st_mode & S_IFDIR ))
@@ -75,6 +82,8 @@ struct Location {
 	}
 
 	bool method_allowed(std::string & method) {
+		if (allowed_methods.empty())
+			return true;
 		return find(allowed_methods.begin(),
 			  		allowed_methods.end(),
 			        	 method) != allowed_methods.end();
@@ -218,7 +227,7 @@ public:
 	Server_config * match_config(std::string name, int port) {
 		std::vector<Server_config*> configs = mapping[port];
 		size_t i = configs.size();
-		for (; i >= 0; i--) {
+		for (i--; i > -1; i--) {
 			if (configs[i]->server_name_in_config_names(name))
 				return configs[i];
 		}
@@ -229,6 +238,10 @@ public:
 			err << "root required";
 		if (ok() && !valid_dir_path(config.root))
 			err << "bad root: " << config.root << " " << strerror(errno);
+		if (ok()
+		&& config.error_pages_path.size()
+		&& !valid_dir_path(config.error_pages_path))
+			err << "bad err pages path: " << config.root << " " << strerror(errno);
 		for (int i = 0; i < config.locs.size() && ok(); i++) {
 			config.locs[i].validate(err);
 		}
@@ -251,12 +264,13 @@ public:
 		configs.push_back(config);
 		// to map pointer on objs in this vector
 		Server_config * conf = &configs.back();
+//		std::cout << "<<<<<" << (&config == conf);
 		for ( int i=0; i<config.ports.size(); i++ ) {
 			int port = config.ports[i];
 			if ( ports.insert(port).second )
 //			if ( ports.find(port) == ports.end() )
 				sockets.push_back( SocketTCP(port) );
-			mapping[port].push_back(conf);
+			mapping[port].push_back(&config);
 		}
 		return SUCCESS;
 	}

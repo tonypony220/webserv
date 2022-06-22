@@ -128,6 +128,7 @@ class HttpResponse : public HttpParser {
 	int error_page_exists() {
 		std::string err_path = 	config->error_pages_path + "/"
 								+ itoa(code) + ".html";
+		clear_path(err_path);
 		struct stat s;
 		bool exists = stat( err_path.c_str(), &s ) == EXIT_SUCCESS;
 		log("error page exists ", err_path, exists);
@@ -392,7 +393,8 @@ class HttpResponse : public HttpParser {
 		);
 		path = target;
 		location = config->route_target_path(path);
-		path.erase(0, 1);
+		clear_path(path);
+//		path.erase(0, 1);
 		if (!location->method_allowed(method))
 			setCode(HttpStatus::MethodNotAllowed, "not allowed");
 		if (location->redirect_uri.size())
@@ -451,7 +453,7 @@ class HttpResponse : public HttpParser {
 			else if ( method == "GET" && ( type & FILE ))
 			{
 //				get_path_from_target();
-				open_file_to_read(target);
+				open_file_to_read(path);
 //				fd = open(target.c_str(), O_RDONLY | O_NONBLOCK);
 //				if ( fd < 0 ) {
 //					log(RED"read file open error: ", strerror(errno),RESET);
