@@ -177,17 +177,16 @@ int main() {
 
 	Server serv;
 	ParserConfig parser("file");
-	if (parser.parse_file() == EXIT_FAILURE)
-		return 1;
+	if (parser.parse_file() == EXIT_FAILURE
+	|| serv.create(parser.configs) == EXIT_FAILURE )
+		return EXIT_FAILURE;
 
-	p(parser.configs);
-	std::cout << GREEN" end "RESET << parser.configs.size() << " \n";
+//	p(parser.configs);
+//	std::cout << GREEN" end "RESET << parser.configs.size() << " \n";
 
-	for ( size_t i = 0; i < parser.configs.size(); i++ ) {
-		if (serv.add_config(parser.configs[i])) {
-			return EXIT_FAILURE;
-		}
-	}
+//	if ()
+//		return 1;
+
 
 //	Server_config config;
 //	config.root = "/Users/mehtel/coding/webserv/";

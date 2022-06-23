@@ -5,6 +5,8 @@
 #include <cmath>
 #include <vector>
 #include <algorithm>
+#include <sys/stat.h>
+#include <dirent.h>
 #define ERROR 	  		-1
 #define SUCCESS 		 0
 #define END 			 1
@@ -20,8 +22,10 @@
 #define VERBOSE
 
 std::string cgi_extensions_supported[] = {"cgi", "py", "sh"};
-std::string HttpMethods[] = {"GET", "POST", "PUT", "CONNECT", "DELETE", "OPTIONS", "TRACE"};
+std::string HttpMethods[] = {"GET", "POST", "PUT", "CONNECT",
+							 "DELETE", "OPTIONS", "TRACE"};
 std::string HttpMethodsImplemented[] = {"GET", "POST", "DELETE", "PUT" };
+
 template <class T, class Val>
 bool easyfind (T & iterable, Val val, size_t * idx = nullptr) {
 	typename T::iterator found = find( iterable.begin(), iterable.end(), val );
@@ -32,6 +36,98 @@ bool easyfind (T & iterable, Val val, size_t * idx = nullptr) {
 	}
 	return false;
 }
+
+std::vector<std::string> list_dir(std::string path) {
+	DIR						 *dir;
+	struct dirent			 *ent;
+	std::vector<std::string> listing;
+
+	if ((dir = opendir (path.c_str())) != nullptr) {
+		while ((ent = readdir(dir)) != nullptr)
+			listing.push_back(std::string(ent->d_name));
+		closedir(dir);
+		return listing;
+	}
+	perror("error list dir");
+	return listing;
+
+}
+
+size_t get_file_size(std::string & path) {
+	struct stat s;
+	size_t sz = 0;
+	if (!stat( path.c_str(), &s ) )
+		sz = s.st_size;
+	return sz;
+}
+
+bool valid_dir_path(std::string path) {
+	struct stat s;
+	if( stat( path.c_str(), &s ) == EXIT_SUCCESS && (s.st_mode & S_IFDIR ))
+		return true;
+	return false;
+}
+
+// recursive search
+bool find_file(std::vector<std::string> & filenames,
+			   std::string path, // onli dir
+			   std::string & result) {
+//	std::cout << "\tsearching in dir: " << path << "\n";
+	std::vector<std::string> listing = list_dir(path);
+	std::vector<std::string> dirs;
+	for ( int i=0; i < listing.size(); i++ )
+	{
+		if (listing[i] == "." || listing[i] == "..")
+			continue;
+		std::string new_path = path + "/" + listing[i];
+		if ( easyfind(filenames, listing[i]) ) {
+			result = new_path;
+			return true;
+		} else {
+			if ( valid_dir_path(new_path) )
+				dirs.push_back(new_path);
+		}
+
+	}
+	for ( int i=0; i < dirs.size(); i++ ) {
+		if ( find_file(filenames, dirs[i], result) )
+			return true;
+	}
+	return false;
+}
+
+//bool find_file(std::vector<std::string> & filenames,
+//			   std::string path,
+//			   std::string & result) {
+//	std::cout << "\tsearching in dir: " << path << "\n";
+//	std::vector<std::string> listing = list_dir(path);
+//	std::vector<std::string> dirs;
+//	for ( int i=0; i < listing.size(); i++ )
+//	{
+//		if (listing[i] == "." || listing[i] == "..") {
+//			listing.erase(listing.begin() + i);
+//			i--;
+//			continue;
+//		}
+//		std::string new_path = path + "/" + listing[i];
+//		if ( easyfind(filenames, listing[i]) ) {
+//			result = new_path;
+//			return true;
+//		} else {
+//			if ( !valid_dir_path(new_path) ) {
+//				listing.erase(listing.begin() + i);
+//				i--;
+//			}
+////				dirs.push_back(new_path);
+//		}
+//
+//	}
+//	for ( int i=0; i < listing.size(); i++ ) {
+//		if ( find_file(filenames, path + "/" + listing[i], result) )
+//			return true;
+//	}
+//	return false;
+//}
 
 template <typename T>
 void p(T a) {
@@ -54,7 +150,9 @@ void log(const T & t, const T2 & t2, const T3 & t3) {
 }
 
 template <class T, class T2, class T3, class T4> 
-void log(const T & t, const T2 & t2, const T3 & t3, const T4 & t4) { std::cout << t << ' ' << t2 <<' ' << t3 << ' ' << t4 << std::endl; }
+void log(const T & t, const T2 & t2, const T3 & t3, const T4 & t4) {
+	std::cout << t << ' ' << t2 <<' ' << t3 << ' ' << t4 << std::endl;
+}
 
 
 bool validate_hex( std::string & number ) {
@@ -109,7 +207,7 @@ int unpack_dequtes(std::string & buffer) {
 		pos = buffer.find("\"", pos);
 		if ( pos == std::string::npos )
 			return EXIT_FAILURE;
-		buffer.erase(pos, 1);	
+		buffer.erase(pos, 1);
 		pos = buffer.find("\"");
 	}
 	return EXIT_SUCCESS;

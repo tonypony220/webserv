@@ -2,6 +2,7 @@
 #include <cstdlib>
 #include <stdio.h>
 #include <unistd.h>
+#include "Utils.hpp"
 #include <vector>
 #include <ctime>
 #include <map>
@@ -51,4 +52,10 @@ int main () {
 	int i = 12;
 	for (; i < 30; i++) ;
 	cout << "i=" << i;
+
+	vector<string> filenames ;
+	string result;
+	filenames.push_back("youpi.bad_extension");
+	find_file(filenames, "/Users/mehtel/coding/webserv", result);
+	cout << "<<<<<<<<" << result << "\n";
 }

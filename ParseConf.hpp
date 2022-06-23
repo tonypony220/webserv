@@ -98,6 +98,8 @@ public:
 				parse_seq(loc.allowed_methods, iss);
 			else if (token == "root")
 				iss >> loc.root;
+			else if (token == "index")
+				parse_seq(loc.filenames, iss);
 			else if (token == "cgi")
 				parse_seq(loc.cgi_extensions, iss);
 			else if (token == "autoindex") {

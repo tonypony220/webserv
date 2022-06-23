@@ -157,6 +157,8 @@ class HttpParser {
 	std::vector<BYTE>::iterator find_CRLF(std::vector<BYTE> & input) {
 		std::vector<BYTE>::iterator start = input.begin();
 		std::vector<BYTE>::iterator res = find(start, input.end(), '\r');
+		if (  res + 1 == input.end() )
+			return input.end();
 		while ( res != input.end() ) {
 			if ( *(res + 1) == '\n' )
 				return res;

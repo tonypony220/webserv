@@ -254,25 +254,30 @@ class HttpResponse : public HttpParser {
 		return std::string(headers["Host"]);
 	}
 
-	int  list_dir(std::string & path) {
+	int autoindex_directory(std::string & path) {
 		//std::vector<std::string> lst;
 		DIR						*dir;
 		struct dirent			*ent;
 		std::string				host(get_host());
 
-		if ((dir = opendir (path.c_str())) != NULL) {
-		  /* print all the files and directories within directory */
-		  while ((ent = readdir (dir)) != NULL) {
-			// TODO add href html links
-			response_body +=  host + target + std::string(ent->d_name) + "\n";
-		  }
-		  closedir (dir);
-		  return EXIT_SUCCESS;
-		} else {
-		  /* could not open directory */
-		  perror("error list dir");
-		  return EXIT_FAILURE;
+		std::vector<std::string> listing = list_dir(path);
+		for (size_t i=0; i < listing.size(); i++ ) {
+			response_body +=  host + target + listing[i] + "\n";
 		}
+
+//		if ((dir = opendir (path.c_str())) != NULL) {
+//		  /* print all the files and directories within directory */
+//		  while ((ent = readdir (dir)) != NULL) {
+//			// TODO add href html links
+//			response_body +=  host + target + std::string(ent->d_name) + "\n";
+//		  }
+//		  closedir (dir);
+//		  return EXIT_SUCCESS;
+//		} else {
+//		  /* could not open directory */
+//		  perror("error list dir");
+//		  return EXIT_FAILURE;
+//		}
 	}
 
 	int search_file() {
@@ -282,18 +287,21 @@ class HttpResponse : public HttpParser {
 		log("searching in: ", path);
 
 		struct stat s;
+		std::string result = path;
 		if( stat( path.c_str(), &s ) == EXIT_SUCCESS )
 		{
 		    if( s.st_mode & S_IFDIR && location->dir_listing) {
-				// TODO search for index.html?
 				type = GENERIC;
-				list_dir( path );
+				autoindex_directory( path );
 				length = response_body.size();
 				return EXIT_SUCCESS;
-		    }
-		    else if( s.st_mode & S_IFREG )
-		    { //it's a file -> determine_file_type
-				length = s.st_size;
+//		    } else if (  ) {
+//
+			} else if ( s.st_mode & S_IFREG || (s.st_mode & S_IFDIR
+				&& find_file(location->filenames, path, result))) {
+				//it's a file -> determine_file_type
+				path = result;
+				length = get_file_size(path);
 				std::string::size_type n = target.rfind('.');
 				if (n != std::string::npos) {
 					file_type = target.substr(n+1);
@@ -387,14 +395,17 @@ class HttpResponse : public HttpParser {
 	void match_config_and_location() {
 		std::string host(headers["host"]);
 		std::string::size_type pos(host.find(":"));
-		config = server_ptr->match_config(
-				host.substr(0, pos),
-				atoi(host.substr(pos + 1, host.size()).c_str())
-		);
+		int port = 0;
+		if ( host.empty() ) {
+			port = atoi(host.substr(pos + 1, host.size()).c_str());
+			host = host.substr(0, pos);
+		}
+		config = server_ptr->match_config( host, port );
 		path = target;
 		location = config->route_target_path(path);
 		clear_path(path);
 //		path.erase(0, 1);
+		if ( host.empty() ) return;
 		if (!location->method_allowed(method))
 			setCode(HttpStatus::MethodNotAllowed, "not allowed");
 		if (location->redirect_uri.size())

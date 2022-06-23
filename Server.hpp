@@ -16,12 +16,6 @@ void clear_path(std::string & path) {
 		path.erase(pos, 1);
 }
 
-bool valid_dir_path(std::string path) {
-	struct stat s;
-	if( stat( path.c_str(), &s ) == EXIT_SUCCESS && (s.st_mode & S_IFDIR ))
-		return true;
-	return false;
-}
 //bool vars_correct(std::vector<std::string> & vars, std::string *refs[]) {
 //	std::set<std::string> r(std::begin(refs), std::end(refs));
 //	size_t sz(r.size());
@@ -43,6 +37,7 @@ struct Location {
 	std::string 		     redirect_uri;
 	bool 					 dir_listing;
 	std::vector<std::string> cgi_extensions;
+	std::vector<std::string> filenames;
 	std::vector<std::string> allowed_methods;
 
 	void display(std::ostream & o) {
@@ -225,13 +220,19 @@ public:
 	}
 
 	Server_config * match_config(std::string name, int port) {
-		std::vector<Server_config*> configs = mapping[port];
-		size_t i = configs.size();
-		for (i--; i > -1; i--) {
-			if (configs[i]->server_name_in_config_names(name))
-				return configs[i];
+		if (!port)
+			return &configs[0];
+		std::vector<Server_config*> conf = mapping[port];
+		int i = conf.size();
+//		if (!i)
+//			std::cerr << "<<<<<<<<< no config?" << conf[i] << "\n";
+		i--;
+		for (; i > 0; i--) {
+			if (conf[i]->server_name_in_config_names(name))
+				return conf[i];
 		}
-		return configs[i];
+		std::cout << "<<<<<<<<< saved config" << conf[i] << "\n";
+		return conf[i]; // default
 	}
 	void validate_config(Server_config & config) {
 		if (ok() && config.root.empty())
@@ -241,7 +242,8 @@ public:
 		if (ok()
 		&& config.error_pages_path.size()
 		&& !valid_dir_path(config.error_pages_path))
-			err << "bad err pages path: " << config.root << " " << strerror(errno);
+			err << "bad err pages path: " << config.root << " "
+			<< strerror(errno);
 		for (int i = 0; i < config.locs.size() && ok(); i++) {
 			config.locs[i].validate(err);
 		}
@@ -258,22 +260,34 @@ public:
 		if (!ok())
 			return error();
 		if ( configs_intersects(config) ) {
-			err << RED"config error: server names conflict\n"RESET;
+//			err << RED"config error: server names conflict\n"RESET;
 			return error();
 		}
 		configs.push_back(config);
 		// to map pointer on objs in this vector
 		Server_config * conf = &configs.back();
-//		std::cout << "<<<<<" << (&config == conf);
+		std::cout << "<<<<<<<< parser config" << &config << "\n";
+		std::cout << "<<<<<<<< serv   config" << conf << "\n";
 		for ( int i=0; i<config.ports.size(); i++ ) {
 			int port = config.ports[i];
 			if ( ports.insert(port).second )
 //			if ( ports.find(port) == ports.end() )
 				sockets.push_back( SocketTCP(port) );
-			mapping[port].push_back(&config);
+			mapping[port].push_back(conf);
 		}
 		return SUCCESS;
 	}
+
+	int create(std::vector<Server_config> & parser_configs) {
+		configs.reserve(parser_configs.size());
+		for ( size_t i = 0; i < parser_configs.size(); i++ ) {
+			if (add_config(parser_configs[i])) {
+				return EXIT_FAILURE;
+			}
+		}
+		return EXIT_SUCCESS;
+	}
+
 	void set_server_name(std::string & name) { app_name = name; }
 
 	Server() :app_name("pony server") {}
