@@ -47,7 +47,7 @@ int parse_seq(std::vector<T> & data, std::istringstream & iss) {
 //			end = true;
 //			data.push_back(token);
 //		}
-		std::cout << BLUE<< token << "  "RESET;
+//		std::cout << BLUE<< token << "  "RESET;
 		data.push_back(token);
 	}
 	return 1;
@@ -98,6 +98,8 @@ public:
 				parse_seq(loc.allowed_methods, iss);
 			else if (token == "root")
 				iss >> loc.root;
+			else if (token == "redirect")
+				iss >> loc.redirect_uri;
 			else if (token == "index")
 				parse_seq(loc.filenames, iss);
 			else if (token == "cgi")
@@ -121,7 +123,7 @@ public:
 
 	void parse_server_block() {
 		while (iss) {
-			std::cout << "cur token: " << token << '\n';
+//			std::cout << "cur token: " << token << '\n';
 			if (state & LOCATION) {
 				parse_location_block();
 			}
@@ -179,7 +181,7 @@ public:
 //			std::istringstream iss(line);
 			if (commented_line(line))
 				continue;
-			std::cout << BLUE" - parsing line: " <<  line << RESET"\n";
+//			std::cout << BLUE" - parsing line: " <<  line << RESET"\n";
 			iss.clear();
 			iss.str(line);
 			iss >> token;

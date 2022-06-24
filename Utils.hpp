@@ -43,8 +43,12 @@ std::vector<std::string> list_dir(std::string path) {
 	std::vector<std::string> listing;
 
 	if ((dir = opendir (path.c_str())) != nullptr) {
-		while ((ent = readdir(dir)) != nullptr)
-			listing.push_back(std::string(ent->d_name));
+		while ((ent = readdir(dir)) != nullptr) {
+			std::string entry(ent->d_name);
+			if (entry == "." || entry == "..")
+				continue;
+			listing.push_back(entry);
+		}
 		closedir(dir);
 		return listing;
 	}
@@ -77,8 +81,6 @@ bool find_file(std::vector<std::string> & filenames,
 	std::vector<std::string> dirs;
 	for ( int i=0; i < listing.size(); i++ )
 	{
-		if (listing[i] == "." || listing[i] == "..")
-			continue;
 		std::string new_path = path + "/" + listing[i];
 		if ( easyfind(filenames, listing[i]) ) {
 			result = new_path;

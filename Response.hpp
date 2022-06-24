@@ -253,6 +253,15 @@ class HttpResponse : public HttpParser {
 	std::string get_host() { // TODO
 		return std::string(headers["Host"]);
 	}
+//	<html>
+//	<head><title>Index of /yo/</title></head>
+//	<body>
+//	<h1>Index of /yo/</h1><hr><pre><a href="../">../</a>
+//	<a href="Yeah/">Yeah/</a>                                              23-Jun-2022 13:43                   -
+//	<a href="nop/">nop/</a>                                               23-Jun-2022 13:43                   -
+//	<a href="youpi.bad_extension">youpi.bad_extension</a>                                23-Jun-2022 13:42                   0
+//	</pre><hr></body>
+//	</html>
 
 	int autoindex_directory(std::string & path) {
 		//std::vector<std::string> lst;
@@ -261,9 +270,18 @@ class HttpResponse : public HttpParser {
 		std::string				host(get_host());
 
 		std::vector<std::string> listing = list_dir(path);
+		response_body += "<html>\n"
+						 "<head><title>Index of /yo/</title></head>\n"
+						 "<body>\n"
+						 "<h1>Index of /yo/</h1><hr><pre><a href=\"../\">../</a>\n";
+
 		for (size_t i=0; i < listing.size(); i++ ) {
-			response_body +=  host + target + listing[i] + "\n";
+			response_body += "<a href=\"" + target + "/" +  listing[i] + "\">" + listing[i] +"</a>\n";
+//			response_body += "<a href=\"cgi/" + listing[i] + "\">" + listing[i] +"</a>\n";
+//															response_body +=  host + target + listing[i] + "\n";
 		}
+		response_body += "</pre><hr></body>\n"
+						 "<html>\n";
 
 //		if ((dir = opendir (path.c_str())) != NULL) {
 //		  /* print all the files and directories within directory */
@@ -290,6 +308,7 @@ class HttpResponse : public HttpParser {
 		std::string result = path;
 		if( stat( path.c_str(), &s ) == EXIT_SUCCESS )
 		{
+			log("search -> listing dir", path);
 		    if( s.st_mode & S_IFDIR && location->dir_listing) {
 				type = GENERIC;
 				autoindex_directory( path );
@@ -299,6 +318,7 @@ class HttpResponse : public HttpParser {
 //
 			} else if ( s.st_mode & S_IFREG || (s.st_mode & S_IFDIR
 				&& find_file(location->filenames, path, result))) {
+				log("search -> file ", path);
 				//it's a file -> determine_file_type
 				path = result;
 				length = get_file_size(path);
@@ -459,10 +479,9 @@ class HttpResponse : public HttpParser {
 			&& search_file() == EXIT_FAILURE ) {
 				setCode(HttpStatus::NotFound, "file not found");
 			} else if ( method == "GET" && type & CGI ) {
+				log("type is CGI");
 //				get_path_from_target();
-			}
-			else if ( method == "GET" && ( type & FILE ))
-			{
+			} else if ( method == "GET" && ( type & FILE )) {
 //				get_path_from_target();
 				open_file_to_read(path);
 //				fd = open(target.c_str(), O_RDONLY | O_NONBLOCK);
@@ -470,8 +489,7 @@ class HttpResponse : public HttpParser {
 //					log(RED"read file open error: ", strerror(errno),RESET);
 //					setCode(HttpStatus::InternalServerError, "open failed");
 //				}
-			}
-			else if ( method == "DELETE" ) { // TODO
+			} else if ( method == "DELETE" ) { // TODO
 				// unlink
 //				get_path_from_target();
 				int ret = unlink(target.c_str());
@@ -482,9 +500,7 @@ class HttpResponse : public HttpParser {
 					fill_buffer_to_send();
 					resp_state = STATE_READY;
 				}
-			}
-			else if (method == "POST" || method == "PUT")
-			{ // TODO
+			} else if (method == "POST" || method == "PUT") { // TODO
 				type |= UPLOAD;
 				if (validate_path() == SUCCESS) {
 					setCode(HttpStatus::NoContent);
@@ -492,10 +508,9 @@ class HttpResponse : public HttpParser {
 //				fill_buffer_to_send();
 //				state = STATE_READY;
 			}
-			else
-			{
-				setCode(HttpStatus::InternalServerError, "what?");
-			}
+//			else {
+//				setCode(HttpStatus::InternalServerError, "what?");
+//			}
 		}
 //		if (!code && method == "GET" && search_file() == EXIT_FAILURE) // TODO different files type
 //			setCode(HttpStatus::NotFound, "file not found");

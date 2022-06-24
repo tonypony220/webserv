@@ -266,8 +266,8 @@ public:
 		configs.push_back(config);
 		// to map pointer on objs in this vector
 		Server_config * conf = &configs.back();
-		std::cout << "<<<<<<<< parser config" << &config << "\n";
-		std::cout << "<<<<<<<< serv   config" << conf << "\n";
+//		std::cout << "<<<<<<<< parser config" << &config << "\n";
+//		std::cout << "<<<<<<<< serv   config" << conf << "\n";
 		for ( int i=0; i<config.ports.size(); i++ ) {
 			int port = config.ports[i];
 			if ( ports.insert(port).second )

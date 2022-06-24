@@ -21,7 +21,7 @@ then
 	echo "Host: \"localhost:8080\"";
 	#echo "Accept: */*";
 	echo ; echo; sleep 1;
-	} | tee /dev/tty | telnet #localhost 8080
+	} | tee /dev/tty | telnet | grep "HTTP/1.1 " > resp #localhost 8080
 elif [[ $1 == c ]]
 then
 	{

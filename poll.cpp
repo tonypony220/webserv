@@ -76,9 +76,11 @@ int loop (Server & serv) {
 
 	// std::vector<SocketTCP> sockets = SocketTCP::getSockets();
 	// adding sockets
-	for (std::vector<SocketTCP>::iterator sockptr = serv.sockets.begin(); sockptr != serv.sockets.end(); sockptr++) {
+	for (std::vector<SocketTCP>::iterator sockptr = serv.sockets.begin();
+		sockptr != serv.sockets.end(); sockptr++) {
+//		sockptr->openSocket();
 		if (sockptr->openSocket())
-			continue; // todo. exit on error
+			return EXIT_FAILURE;
 		poll_fd.fd = sockptr->getFd();
 		poll_fd.events = POLLIN | POLLOUT;
 		fds.push_back(poll_fd);
@@ -140,10 +142,10 @@ int loop (Server & serv) {
 					poll_fd.fd = io->getFd();
 					fds.push_back(poll_fd);
 					io_sessions.push_back(sptr<IOInterface>( io ));
-					log(BLUE"cgi created", poll_fd.fd);
+					log(BLUE"new interface created", poll_fd.fd);
 				} // TODO handle error
 				else
-					log(RED"cgi failed"RESET, poll_fd.fd);
+					log(RED"new interface failed"RESET, poll_fd.fd);
 			}
 //			else if ( ret == HANDLE_FILE ) {
 //				log("file session creating...", poll_fd.fd);
@@ -176,7 +178,7 @@ int loop (Server & serv) {
 int main() {
 
 	Server serv;
-	ParserConfig parser("file");
+	ParserConfig parser("conf");
 	if (parser.parse_file() == EXIT_FAILURE
 	|| serv.create(parser.configs) == EXIT_FAILURE )
 		return EXIT_FAILURE;
@@ -204,6 +206,7 @@ int main() {
 //	loc1.allow("DELETE");
 //
 //	serv.add_config(config);
-	loop(serv);
+	if (loop(serv))
+		return EXIT_FAILURE;
 	return EXIT_SUCCESS;
 }

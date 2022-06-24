@@ -1,0 +1,79 @@
+server {
+    server_name serv.org www.serv.org
+    listen 2001
+
+    client_max_body_size 5
+    root /Users/mehtel/coding/webserv/
+    enable_session
+    error_page /Users/mehtel/coding/webserv/err_pages
+    location / {
+        index index.html
+        allowed_methods   GET
+    }
+    location /images/ {
+
+        root /Users/mehtel/coding/webserv/tmp/
+        allowed_methods   PUT POST
+    }
+    location /redir/ {
+        redirect http://google.com
+    }
+
+    location /put_test/ {
+        root              /Users/mehtel/coding/webserv/
+        allowed_methods   PUT
+    }
+
+    location /upload/ {
+        root              /Users/mehtel/coding/webserv/
+        allowed_methods   POST DELETE
+    }
+
+    location /cgi {
+        autoindex on
+        root /Users/mehtel/coding/webserv/cgi
+        cgi cgi py
+        #cgi_timeout 5
+    }
+}
+
+
+
+
+#server {
+#    server_name serv.org www.serv.org
+#    listen 91
+#
+#    client_max_body_size 5
+#    root /Users/mehtel/coding/webserv/
+#    enable_session
+#    error_page /Users/mehtel/coding/webserv/err_pages
+#    location / {
+#        autoindex on
+#        allowed_methods   GET
+#    }
+#    location /images/ {
+#
+#        root /Users/mehtel/coding/webserv/
+#        allowed_methods   GET
+#    }
+#
+#    location /storage/ {
+#
+#        root              /Users/mehtel/coding/webserv/
+#        allowed_methods   GET
+#        autoindex         on
+#    }
+#
+#    location /upload/ {
+#        root              /Users/mehtel/coding/webserv/
+#        allowed_methods   POST DELETE
+#    }
+#
+#    location /cgi {
+#        autoindex on
+#        root /Users/mehtel/coding/webserv/cgi
+#        cgi cgi py
+#        #cgi_timeout 5
+#    }
+#}

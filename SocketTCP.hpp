@@ -43,6 +43,7 @@ class SocketTCP {
 			fd = socket(AF_INET, SOCK_STREAM, 0);
 			if ( fd < 0 ) {
 				buff = std::string("socket error: ") + std::string(std::strerror(errno));
+				std::cerr << buff;
 				return -1;
 			}
 			fcntl(fd, F_SETFL, O_NONBLOCK);
@@ -66,6 +67,7 @@ class SocketTCP {
 			rc = bind(fd, (struct sockaddr*) &addr, sizeof(addr));
 			if( rc < 0 ) {
 				buff = std::string("bind error: ") + std::string(std::strerror(errno));
+				std::cerr << buff;
 				close(fd);
 				fd = -1;
 				return -1;
@@ -75,7 +77,8 @@ class SocketTCP {
 		    if (rc < 0)	{
 			  perror("listen() failed");
 			  close(fd);
-			  //exit(-1);
+			  return -1;
+//			  exit(-1);
 			}
 
 			log("Socket listening, port: ", port);

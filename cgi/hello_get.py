@@ -1,8 +1,8 @@
 #!/usr/bin/python
 
 # Import modules for CGI handling 
-import cgi, cgitb 
-import pprint 
+import cgi, cgitb
+import pprint
 
 from os import environ
 # Create instance of FieldStorage 
