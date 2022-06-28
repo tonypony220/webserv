@@ -1,4 +1,5 @@
 #include <iostream>
+#define DEBUG 0
 class Counter
 {
 public:
@@ -67,14 +68,14 @@ public:
         {
             (*m_counter)++;
         }
-		std::cout << PURPLE"smart ptr ctor: " << *this << "\n"RESET; // ptr= " << this->ptr << " counter" << m_counter->get() << "\n";
+		DEBUG && std::cout << PURPLE"smart ptr ctor: " << *this << "\n"RESET; // ptr= " << this->ptr << " counter" << m_counter->get() << "\n";
 	}
 	sptr(const sptr & obj) {
 		ptr = obj.ptr;
 		m_counter = obj.m_counter;
 		(*m_counter)++;
 //		*this = obj;
-		std::cout << PURPLE"smart ptr copy: " << *this << "\n"RESET; // ptr= " << this->ptr << " counter" << m_counter->get() << "\n";
+		DEBUG && std::cout << PURPLE"smart ptr copy: " << *this << "\n"RESET; // ptr= " << this->ptr << " counter" << m_counter->get() << "\n";
 	}
 
 	sptr& operator=(const sptr & obj) 
@@ -85,7 +86,7 @@ public:
 			m_counter = obj.m_counter;
 			(*m_counter)++;
 		}
-		std::cout << PURPLE"smart ptr assigment: " << *this << "\n"RESET; // ptr= " << this->ptr << " counter" << m_counter->get() << "\n";
+		DEBUG && std::cout << PURPLE"smart ptr assigment: " << *this << "\n"RESET; // ptr= " << this->ptr << " counter" << m_counter->get() << "\n";
 		return *this;
 	} 
 
@@ -111,7 +112,7 @@ public:
 
 	~sptr() // destructor
 	{
-		std::cout << PURPLE"smart ptr dtor: " << *this << "\n"RESET;
+		DEBUG && std::cout << PURPLE"smart ptr dtor: " << *this << "\n"RESET;
 //		std::cout << "smart ptr destructor: ptr= " << this->ptr << " counter" << m_counter->get() << "\n";
 //		std::cout << "smart ptr destructor: " << *this << "\n"; // ptr= " << this->ptr << " counter" << m_counter->get() << "\n";
 		__cleanup__();

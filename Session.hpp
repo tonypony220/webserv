@@ -43,16 +43,16 @@ public:
 
 	CgiPipe(int fd, HttpResponse * resp) 
 		: IOInterface(fd, NULL), response_ptr(resp) {
-		log(" CGI Interface created, fd=", fd);
+		log(CYAN" CGI Interface created, fd=", fd, RESET);
 	} // NULL stub
 
 	~CgiPipe() {
-		log(" CGI Interface destructed, fd=", fd);
+		log(CYAN" CGI Interface destructed, fd=", fd, RESET);
+		close(fd);
 	}
 
 	virtual int		processEvent( short event ) {
 		int ret;
-		log(PURPLE"\r\t\t\t\tprocessing cgi pipe");
 		if (event & POLLIN) {
 			//log("\tsession reading...fd=",fd);
 			ret = readPipe();
@@ -77,6 +77,7 @@ public:
 		char buff[BUFF_SIZE];
 		memset(buff, 0, BUFF_SIZE);
 		int rc = read(fd, buff, BUFF_SIZE - 1);
+		log(PURPLE"\r\t\t\t\tprocessing cgi pipe read=", rc,RESET);
 		if (rc == 0) {
 			response_ptr->get_resp_state() = STATE_DONE;
 			return END;
@@ -119,6 +120,7 @@ public:
 	} // NULL stub
 	~File() {
 		log(" FILE Interface destructed, fd=", fd);
+		close(fd);
 	}
 
 	virtual int		processEvent( short event ) {

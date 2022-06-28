@@ -425,25 +425,6 @@ class HttpResponse : public HttpParser {
 		length = response_body.size();
 //		}
 	}
-	void match_config_and_location() {
-		std::string host(headers["host"]);
-		std::string::size_type pos(host.find(":"));
-		int port = 0;
-		if ( host.empty() ) {
-			port = atoi(host.substr(pos + 1, host.size()).c_str());
-			host = host.substr(0, pos);
-		}
-		config = server_ptr->match_config( host, port );
-		path = target;
-		location = config->route_target_path(path);
-		clear_path(path);
-//		path.erase(0, 1);
-		if ( host.empty() ) return;
-		if (!location->method_allowed(method))
-			setCode(HttpStatus::MethodNotAllowed, "not allowed");
-		if (location->redirect_uri.size())
-			setCode(HttpStatus::TemporaryRedirect, "redirect");
-	}
 	int create_file() {
 		fd = open(path.c_str(), O_WRONLY | O_NONBLOCK | O_CREAT | O_TRUNC ,  0400);
 		if ( fd < 0 ) {
@@ -486,7 +467,7 @@ class HttpResponse : public HttpParser {
 		cgi_proc_exited = false;
 
 		// must search config even if code has been set cause error path
-		match_config_and_location();
+//		match_config_and_location();
 		if ( !code ) {
 
 			if ( (method == "GET" || method == "DELETE")
@@ -631,7 +612,10 @@ class HttpResponse : public HttpParser {
 			setCode(HttpStatus::InternalServerError, "cgi fail");
 			return ERROR;
 		}
-
+		fcntl(fdin[IN], F_SETFL, O_NONBLOCK);
+		fcntl(fdin[OUT], F_SETFL, O_NONBLOCK);
+		fcntl(fdout[IN], F_SETFL, O_NONBLOCK);
+		fcntl(fdout[OUT], F_SETFL, O_NONBLOCK);
 		// Duplicate stdin and stdout file descriptors
 		int fdOldStdIn = dup(fileno(stdin));
 		int fdOldStdOut = dup(fileno(stdout));
@@ -659,8 +643,15 @@ class HttpResponse : public HttpParser {
 		close(fdOldStdIn);
 		close(fdOldStdOut);
 
-		//Отдаем тело запроса дочернему процессу
-//		write(fdin[OUT], &request_buffer[0], request_buffer.size());
+		// this
+		int w = write(fdin[OUT], &request_buffer[0], request_buffer.size());
+		while ( w > 0) {
+			request_buffer.erase(request_buffer.begin(), request_buffer.begin() + w + 1);
+			w = write(fdin[OUT], &request_buffer[0], request_buffer.size());
+		}
+		if (w < 0)
+			perror(RED"write pipe error"RESET);
+		close(fdin[OUT]);
 		resp_state = STATE_INFC_CREATED;
 		return fdout[IN];
 

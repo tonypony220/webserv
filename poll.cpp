@@ -87,6 +87,7 @@ int loop (Server & serv) {
 		if (sockptr->openSocket())
 			return EXIT_FAILURE;
 		poll_fd.fd = sockptr->getFd();
+		fcntl(poll_fd.fd, F_SETFL, O_NONBLOCK);
 		poll_fd.events = POLLIN | POLLOUT;
 		fds.push_back(poll_fd);
 		io_sessions.push_back(sptr<IOInterface>(new tcpSession(LISTENING_SESSION, &serv)));
@@ -100,9 +101,9 @@ int loop (Server & serv) {
 //		std::cout << "Status: " << "fds:" << fds.size();
 //		std::cout << " poll=" << rc << std::endl
 
-		for (int i = 0; i < io_sessions.size(); i++) {
-			std::cout << io_sessions[i] << " ";
-		}
+//		for (int i = 0; i < io_sessions.size(); i++) {
+//			std::cout << io_sessions[i] << " ";
+//		}
 //		std::cout.flush();
 		for (int i = 0; i < io_sessions.size(); i++) {
 //			if ( ! (fds[i].revents & ( POLLIN | POLLOUT ) ) )// == 0 ??
@@ -131,6 +132,7 @@ int loop (Server & serv) {
 						if (errno != EWOULDBLOCK )
 							perror("accept error: ");
 					} else {
+						fcntl(poll_fd.fd, F_SETFL, O_NONBLOCK);
 						//poll_fd.fd = new_socket_fd;
 						log(GREEN"accepted new connection, fd: ", poll_fd.fd, "ip: ", str);
 						log(RESET);
@@ -179,7 +181,7 @@ int loop (Server & serv) {
 //				log("cgi failed", poll_fd.fd);
 //			}
 			else if (ret != SUCCESS) {
-				std::cout << PURPLE"ptr IOinterface deleting: " << *(io_sessions.begin() + i) << "\n"RESET;
+//				std::cout << PURPLE"ptr IOinterface deleting: " << *(io_sessions.begin() + i) << "\n"RESET;
 				log(BLUE" closing connection fd=", fds[i].fd, RESET);
 //				close_connection(sessions, fds);
 				int closed = close(fds[i].fd);
