@@ -143,13 +143,13 @@ class HttpResponse : public HttpParser {
 
 	int ready_to_write() {
 		if ( resp_state == STATE_READY ) {
-			log(BLUE"response state READY "RESET, get_state_type_str());
+//			log(BLUE"response state READY "RESET, get_state_type_str());
 			return 1;
 		}
 		if (!code)
 			setCode(HttpStatus::OK);
 		if ( code > 300 && !(type & FILE_ERROR) ) {
-			log(BLUE"response error READY "RESET, get_state_type_str());
+//			log(BLUE"response error READY "RESET, get_state_type_str());
 			if ( config->error_pages_path.size() && error_page_exists()) {
 				type = FILE | HTML | FILE_ERROR;
 				return 0;
@@ -199,7 +199,7 @@ class HttpResponse : public HttpParser {
 			wait_process();
 			if ( resp_state == STATE_DONE && cgi_proc_exited ) {
 				/* state DONE - waiting of pipe. */
-				log("<<<<<<<<<<<<<<<<");
+//				log("<<<<<<<<<<<<<<<<");
 				resp_state = STATE_READY;
 //				if ( wait_process() == ERROR ) {
 //					setCode(HttpStatus::InternalServerError, "cgi fail");
@@ -214,7 +214,7 @@ class HttpResponse : public HttpParser {
 			return response_buffer.size();
 		}
 		if ( type & FILE ) {
-			log(BLUE"response FILE "RESET, get_state_type_str());
+//			log(BLUE"response FILE "RESET, get_state_type_str());
 //			if ( !response.empty() )
 			if ( resp_state < STATE_WAIT ) {
 				fill_buffer_to_send();
@@ -229,11 +229,11 @@ class HttpResponse : public HttpParser {
 			return response_buffer.size();
 		}
 		if ( !response_body.empty() ) {
-			log(BLUE"response empty READY "RESET, get_state_type_str());
+//			log(BLUE"response empty READY "RESET, get_state_type_str());
 			fill_buffer_to_send();
 			resp_state = STATE_READY;
 		}
-		log(BLUE"response SIZE "RESET, get_state_type_str());
+//		log(BLUE"response SIZE "RESET, get_state_type_str());
 		return response_buffer.size();
 	}
 	void abort() {

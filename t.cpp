@@ -6,6 +6,7 @@
 #include <vector>
 #include <ctime>
 #include <map>
+#include <list>
 using namespace std;
 int main () {
 	char buff[40];
@@ -38,19 +39,20 @@ int main () {
 //	execvp(args[0], (char* const*)args);
 //	perror("");
 
+
 	const std::time_t now = std::time(nullptr);
 	char buf[64];
 	if (strftime(buf, sizeof buf, "%a, %e %b %Y %H:%M:%S GMT\n", std::gmtime(&now))) {
 //			std::cout << std::setw(40) << "    strftime %a %b %e %H:%M:%S %Y" << buf;
 //		response += "Date: Mon, 27 Jul 2009 12:28:53 GMT\r\n";
 		cout << "Mon, 27 Jul 2009 12:28:53 GMT\n";
-		std::string a(buf) ;
+		std::string a(buf);
 		cout << a;
 	} else
 		cout << "err";
 
 	int i = 12;
-	for (; i < 30; i++) ;
+	for (; i < 30; i++);
 	cout << "i=" << i;
 
 	vector<string> filenames ;
@@ -72,6 +74,7 @@ int main () {
 		}
 		cout << arr[i] << " ";
 	}
-
+	list<int> a;
+	a.push_back(asd);
 
 }

@@ -67,14 +67,25 @@ public:
         {
             (*m_counter)++;
         }
+		std::cout << PURPLE"smart ptr ctor: " << *this << "\n"RESET; // ptr= " << this->ptr << " counter" << m_counter->get() << "\n";
 	}
-	sptr(const sptr & obj) { *this = obj; }
-
-	sptr& operator=(const sptr & obj) 
-	{  
+	sptr(const sptr & obj) {
 		ptr = obj.ptr;
 		m_counter = obj.m_counter;
-        (*m_counter)++;
+		(*m_counter)++;
+//		*this = obj;
+		std::cout << PURPLE"smart ptr copy: " << *this << "\n"RESET; // ptr= " << this->ptr << " counter" << m_counter->get() << "\n";
+	}
+
+	sptr& operator=(const sptr & obj) 
+	{
+		if (this != &obj) {
+			__cleanup__();
+			ptr = obj.ptr;
+			m_counter = obj.m_counter;
+			(*m_counter)++;
+		}
+		std::cout << PURPLE"smart ptr assigment: " << *this << "\n"RESET; // ptr= " << this->ptr << " counter" << m_counter->get() << "\n";
 		return *this;
 	} 
 
@@ -83,25 +94,46 @@ public:
 		return this->ptr;
 	}
 
-	T& operator*() {
+	T* get_ptr() // deferencing arrow operator
+	{
+		return this->ptr;
+	}
+	int get_num() // deferencing arrow operator
+	{
+		return m_counter->get();
+	}
+
+	T& operator*()
+	{
 		return *(this->ptr);
 	}
 
+
 	~sptr() // destructor
 	{
-		(*m_counter)--;
-        if (m_counter->get() == 0)
-        {
-            delete m_counter;
-            delete ptr;
-        }
-		//__cleanup__();
+		std::cout << PURPLE"smart ptr dtor: " << *this << "\n"RESET;
+//		std::cout << "smart ptr destructor: ptr= " << this->ptr << " counter" << m_counter->get() << "\n";
+//		std::cout << "smart ptr destructor: " << *this << "\n"; // ptr= " << this->ptr << " counter" << m_counter->get() << "\n";
+		__cleanup__();
 	}
 
 private:
 	void __cleanup__()
 	{
-		if (ptr != nullptr)
+		(*m_counter)--;
+		if (m_counter->get() == 0)
+		{
+			delete m_counter;
+//			if (ptr != nullptr)
 			delete ptr;
+//            delete ptr;
+		}
 	}
 };
+
+template <class T>
+std::ostream & operator<<( std::ostream & o, sptr<T> & p ) {
+	o << p.get_ptr();
+	o << " " << p.get_num();
+	return ( o );
+}

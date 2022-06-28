@@ -5,11 +5,12 @@ if [[ $1 == a ]]; then
 	{
 	echo "open localhost 2001";
 	sleep 1;
-	echo "GET / HTTP/1.1";
+	echo "GET /big_ascii_file.cc HTTP/1.1";
 	echo "User-Agent: \"curl/7.54.0sdf\"  \"abd\"";
 	echo "Host: \"localhost:2001\"";
-	#echo "Accept: */*";
-	echo ; echo; sleep 1;
+	echo "Accept: */*";
+	echo ; echo EOF; #sleep 1;
+	exit;
 	} | tee /dev/tty | telnet #localhost 8080
 elif [[ $1 == b ]]
 then

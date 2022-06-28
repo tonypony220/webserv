@@ -20,11 +20,11 @@ public:
 	IOInterface(int  fd_, Server * serv) 
 		: fd(fd_), counter(0), server_ptr(serv) 
 	{
-//		log("IOInterface created fd: ", fd);
+		log(PURPLE"IOInterface created fd: ", fd, RESET);
 	}
 	size_t			counter;
 	virtual			~IOInterface() {
-//		log(counter, " IOInterface destructed: ", fd);
+		log(counter, PURPLE" IOInterface destructed: ", fd, RESET);
 	}
 	int 		 	getFd( void ) const { return fd; }
 	Server * 		getServ( void ) const { return server_ptr; }
@@ -166,10 +166,10 @@ public:
 		add_request();
 		read_eof = false;
 		start = std::time(nullptr);
-		log("tcpSession created, fd: ", fd); //fd &&
+		log(PURPLE"tcpSession created, fd: ", fd, RESET); //fd &&
 	}
 	~tcpSession() { 
-		log("Session destructed, fd: ", fd);
+		log(PURPLE"tcpSession destructed, fd: ", fd, RESET);
 	}
 //	tcpSession( const tcpSession & copy )
 //		: fd(copy.fd), server_ptr(copy.server_ptr) { *this = copy; }

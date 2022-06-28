@@ -5,6 +5,7 @@
 //#include "Server.hpp"
 #include "ParseConf.hpp"
 #include <vector>
+#include <list>
 #include <unordered_map>
 #include <sys/socket.h>
 #include <arpa/inet.h>
@@ -77,6 +78,7 @@ int loop (Server & serv) {
 	int timeout = 1 * 1000; // 3 min (3 * 60 * 1000)
 	signal(SIGPIPE, handler);
 
+	io_sessions.reserve(100);
 	// std::vector<SocketTCP> sockets = SocketTCP::getSockets();
 	// adding sockets
 	for (std::vector<SocketTCP>::iterator sockptr = serv.sockets.begin();
@@ -98,6 +100,9 @@ int loop (Server & serv) {
 //		std::cout << "Status: " << "fds:" << fds.size();
 //		std::cout << " poll=" << rc << std::endl
 
+		for (int i = 0; i < io_sessions.size(); i++) {
+			std::cout << io_sessions[i] << " ";
+		}
 //		std::cout.flush();
 		for (int i = 0; i < io_sessions.size(); i++) {
 //			if ( ! (fds[i].revents & ( POLLIN | POLLOUT ) ) )// == 0 ??
@@ -114,26 +119,34 @@ int loop (Server & serv) {
 //				poll_fd.fd = accept(fds[i].fd, NULL, NULL);
 				struct sockaddr_in client_addr;
 				socklen_t len = sizeof(client_addr);
+				poll_fd.fd = 0;
+				/* potential bottleneck */
+				while (poll_fd.fd != -1) {
+					poll_fd.fd = accept(fds[i].fd, (struct sockaddr*)&client_addr, &len);
+					struct in_addr ipAddr = client_addr.sin_addr;
+					char str[INET_ADDRSTRLEN];
+					inet_ntop( AF_INET, &ipAddr, str, INET_ADDRSTRLEN );
 
-				poll_fd.fd = accept(fds[i].fd, (struct sockaddr*)&client_addr, &len);
-				struct in_addr ipAddr = client_addr.sin_addr;
-				char str[INET_ADDRSTRLEN];
-				inet_ntop( AF_INET, &ipAddr, str, INET_ADDRSTRLEN );
-
-				if (poll_fd.fd < 0 && errno != EWOULDBLOCK) {
-					perror("accept error: ");
-				} else {
-					//poll_fd.fd = new_socket_fd;
-					log(GREEN"accepted new connection, fd: ", poll_fd.fd, "ip: ", str);
-					log(RESET);
-					poll_fd.events = POLLIN | POLLOUT;
-					fds.push_back(poll_fd);
-					tcpSession * session = new tcpSession(poll_fd.fd, &serv);
-					session->ip = std::string(str);
-					io_sessions.push_back(sptr<IOInterface>(session));
+					if (poll_fd.fd < 0){ // && errno != EWOULDBLOCK) {
+						if (errno != EWOULDBLOCK )
+							perror("accept error: ");
+					} else {
+						//poll_fd.fd = new_socket_fd;
+						log(GREEN"accepted new connection, fd: ", poll_fd.fd, "ip: ", str);
+						log(RESET);
+						poll_fd.events = POLLIN | POLLOUT;
+						fds.push_back(poll_fd);
+						tcpSession * session = new tcpSession(poll_fd.fd, &serv);
+						session->ip = std::string(str);
+						sptr<IOInterface> p(session);
+//					io_sessions.push_back(sptr<IOInterface>(session));
+//					std::cout << PURPLE"ptr IOinterface createed: " << p << "\n"RESET;
+						io_sessions.push_back(p);
+					}
 				}
+
 				//accept_connections(fds[i].fd, *io_sessions[i]->getServ(), io_sessions, fds);
-				continue;
+				break;
 			}
 			int ret = io_sessions[i]->processEvent(fds[i].revents);
 //			log(BLUE"\rprocessed event=", ret, RESET);
@@ -151,6 +164,7 @@ int loop (Server & serv) {
 				} // TODO handle error
 				else
 					log(RED"new interface failed"RESET, poll_fd.fd);
+				break;
 			}
 //			else if ( ret == HANDLE_FILE ) {
 //				log("file session creating...", poll_fd.fd);
@@ -165,13 +179,18 @@ int loop (Server & serv) {
 //				log("cgi failed", poll_fd.fd);
 //			}
 			else if (ret != SUCCESS) {
+				std::cout << PURPLE"ptr IOinterface deleting: " << *(io_sessions.begin() + i) << "\n"RESET;
 				log(BLUE" closing connection fd=", fds[i].fd, RESET);
 //				close_connection(sessions, fds);
 				int closed = close(fds[i].fd);
 				log(BLUE" closed=", closed, RESET);
-				std::cout.flush();
+//				std::cout.flush();
 				// https://stackoverflow.com/questions/9927163/erase-element-in-vector-while-iterating-the-same-vector
-				io_sessions.erase(io_sessions.begin() + i);
+				std::vector<sptr<IOInterface> >::iterator x;
+//				std::cout << "iosession size =" << io_sessions.size() << "\n";
+				x = io_sessions.erase(io_sessions.begin() + i);
+//				std::cout << "iosession size =" << io_sessions.size() << "\n";
+//				std::cout << "ptr: " << (x == io_sessions.end() ) << " ";
 				fds.erase(fds.begin() + i);
 				i--; // keeps index in same place;
 			}
@@ -185,7 +204,7 @@ int loop (Server & serv) {
 int main() {
 
 	Server serv;
-	ParserConfig parser("home_conf");
+	ParserConfig parser("conf");
 	if (parser.parse_file() == EXIT_FAILURE
 	|| serv.create(parser.configs) == EXIT_FAILURE )
 		return EXIT_FAILURE;
