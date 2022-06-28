@@ -9,6 +9,7 @@
 #include "Server.hpp"
 #define LISTENING_SESSION 0 // zero stub for vector of FDs
 #define DEFAULT_REQUEST_TIMEOUT 4 // seconds
+#define DEFAULT_RESPONSE_TIMEOUT 5 // seconds
 //#define BUFF_SIZE 3
 //#define MORE 1
 
@@ -128,7 +129,7 @@ public:
 		int 		rc = ::write(fd, &buff[0], buff.size());
 		log("write to file ", fd, BLUE"bytes="RESET, rc); //fd &&
 		if (rc < 0) {
-			log(RED"write error: ", strerror(errno), RESET);
+			log(RED"file write error: ", strerror(errno), RESET);
 			return ERROR;
 		}
 		if (rc == 0) {
@@ -152,6 +153,8 @@ class tcpSession : public IOInterface {
 //	std::string 			  buffer;
 	std::vector<char> 		  buffer;
 	std::time_t 			  start; // = std::time(nullptr);
+	std::time_t 			  resp_start; // = std::time(nullptr);
+	bool					  read_eof;
 
 public:
 	std::string 			  ip;
@@ -161,6 +164,7 @@ public:
 		current_response(0),
 		current_request(0) {
 		add_request();
+		read_eof = false;
 		start = std::time(nullptr);
 		log("tcpSession created, fd: ", fd); //fd &&
 	}
@@ -207,26 +211,37 @@ public:
 	}
 
 	int 		 processEvent( short event ) {
-		int ret = 0;
-		if (event & POLLIN) {
+		int ret = SUCCESS;
+		if (!read_eof && (event & POLLIN)) {
 			ret = readSocket();
-			if (ret == ERROR)
-				return ERROR;
+			if (ret == END) {
+				read_eof = true;
+				ret = SUCCESS;
+			}
+//			if (ret == ERROR)
+//				return ERROR;
+//			if (ret == END)
+//				ret = SUCCESS;
 		}
-		std::cout.precision(40);
-//		std::cout << "difftime" << difftime( time(nullptr), start ) << std::endl;
-//		printf("%.f seconds have passed since the beginning of the month.\n", difftime( time(nullptr), start ));
-		if (difftime( time(nullptr), start ) > DEFAULT_REQUEST_TIMEOUT) {
-			requests[current_request].setCode(HttpStatus::RequestTimeout, "timeout");
-		}
-		// TODO
-		if (requests[current_request].isComplete()) {
+		if (!read_eof &&  requests[current_request].isComplete()) {
 			HttpResponse resp = HttpResponse(requests[current_request]);
 			std::cout << resp << std::endl;
 			responses.push_back(resp);
+			resp_start = std::time(nullptr);
+			requests.clear();
 			add_request();
-			current_request++;
+//			current_request++;
 		}
+		std::cout.precision(40);
+//		std::cout << "difftime=" << difftime( time(nullptr), start ) << std::endl;
+//		std::cout << "requests=" << requests.size() << std::endl;
+//		std::cout << "responses=" << responses.size() << std::endl;
+//		printf("%.f seconds have passed since the beginning of the month.\n", difftime( time(nullptr), start ));
+		if (difftime( time(nullptr), start ) > DEFAULT_REQUEST_TIMEOUT) {
+			requests[current_request].setCode(
+					HttpStatus::RequestTimeout, "timeout");
+		}
+		// TODO
 //		if (requests[current_request].isComplete() && !buffer.empty()) {
 //			add_request();
 //			current_request++;
@@ -238,37 +253,48 @@ public:
 				log(BLUE"session should create additional Interface..."RESET, fd);
 				return ADD_IFCE;
 			}
-			if (responses[current_response].ready_to_write()) {// && (event & POLLOUT) ) { // TCP buffer have space to write to
-				std::cout << "\r\t\t\t\t\t\t\t\t\t\tsession writing..." << fd;
+			if (responses[current_response].ready_to_write()
+			&& (event & POLLOUT) ) { // TCP buffer have space to write to
+				std::cout << "\r\t\t\t\tsession writing fd(" << fd << ")";
 				ret = writeSocket(); // not returns END !
-				if (ret == ERROR)
-					return ERROR;
-//				if (ret == END && responses[current_response].completed()) // TODO next response
-//					return END;
+				resp_start = std::time(nullptr);
+//				if (ret == ERROR)
+//					return ERROR;
 			}
+			if (ret == ERROR
+			|| difftime( time(nullptr), resp_start ) > DEFAULT_RESPONSE_TIMEOUT) {
+//				log(RED"Repsonse timeed out"RESET);
+				responses[current_response].abort();
+			}
+
 			if ( responses[current_response].completed() ) {
 				//127.0.0.1 - - [13/Jun/2022:19:19:54 +0300] "GET /file HTTP/1.1" 200 0 "-" "curl/7.54.0"
 				const std::time_t now = std::time(nullptr);
 				char buf[64];
-				strftime(buf, sizeof buf, "[%e/%b/%Y:%H:%M:%S %z]", std::localtime(&now));
+				strftime(buf, sizeof buf, "[%e/%b/%Y:%H:%M:%S %z]",
+			 				std::localtime(&now));
 				std::cout << "\n"GREEN << ip << " - " << buf
-				<< responses[current_response].start_line
-				<< "  "
+				<< responses[current_response].start_line << "  "
 				<< responses[current_response].short_log_line()
 				<< RESET << std::endl;
+				std::cout.flush();
 				return END;
 			}
 		}
+		if ( ret )
+			std::cout << RED"WTF";
 		return ret;
+//		return SUCCESS;
 	}
 	int  		  writeSocket() {
 		//TODO maybe not sent all response for once cause
 		std::vector<BYTE> & buff = responses[current_response].get_response_buffer();
 		int 		rc = ::write(fd, &buff[0], buff.size());
+		std::cout << "bytes=" << rc;
 //		log("write to socket:", PURPLE, buff, RESET); //fd &&
 		if (rc < 0) {
 //			std::cerr << RED"write error: "RESET << strerror(errno);
-			log(RED"write error: ", strerror(errno), RESET);
+			log(RED"socket write error: ", strerror(errno), RESET);
 			return ERROR;
 		} //if (rc == 0) { ????????????
 		if (rc == 0) {
@@ -290,6 +316,7 @@ public:
 		if (rc == 0) {
 			//std::cerr << RED"closed"RESET;
 			return END; //TODO should return  END
+//			return SUCCESS;
 		}
 		if (rc < 0) {
 			log(RED"read socket error: ",strerror(errno),RESET);

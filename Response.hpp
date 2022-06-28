@@ -7,6 +7,7 @@
 #include <unistd.h>
 #include <dirent.h>
 #include <cstdlib>
+#include <csignal>
 #include <ctime>
 #include <sys/stat.h> // chmod
 #define IN 0
@@ -18,6 +19,7 @@
 #define HTML 16
 #define UPLOAD 32
 #define FILE_ERROR 64
+#define TIMEOUT_ERROR 128
 
 //#define STATE_DISCOVERED  //1
 #define STATE_NONE  		  10  //2
@@ -168,6 +170,7 @@ class HttpResponse : public HttpParser {
 ////					response_body.clear();
 //					return 0;
 //				}
+				close(fd);
 				length = response_body.size();
 				fill_buffer_to_send();
 				resp_state = STATE_READY;
@@ -233,13 +236,23 @@ class HttpResponse : public HttpParser {
 		log(BLUE"response SIZE "RESET, get_state_type_str());
 		return response_buffer.size();
 	}
+	void abort() {
+		log(RED"aborting");
+		type |= TIMEOUT_ERROR;
+		if ( (type & CGI) && pid )
+			kill(pid, SIGKILL);
+		if (fd > -1)
+			close(fd);
+
+	}
 
 	bool completed() const {
 //		log("buffer: ", buffer.size());
 //		log("state=", state);
 //		if ( (type & CGI) &&  )
 //		std::cout << "\r\t\t\t\t\t\t\tresp state=" << resp_state;
-		return resp_state == STATE_READY && response_buffer.empty();
+		return (resp_state == STATE_READY
+				&& response_buffer.empty()) || type & TIMEOUT_ERROR;
 //		if ( cgi_state >= CGI_STATE_DONE )
 //			return true;
 //		if ( file_state ) {
@@ -468,6 +481,7 @@ class HttpResponse : public HttpParser {
 		fd = -1; // initialization
 		length = 0; // initialization
 		type = 0;
+		pid = 0;
 		resp_state = STATE_NONE;
 		cgi_proc_exited = false;
 

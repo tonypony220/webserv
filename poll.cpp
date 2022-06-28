@@ -19,6 +19,8 @@
 
 
 
+int sig = 0;
+
 int timeout;
 int stop = 0;
 
@@ -73,6 +75,7 @@ int loop (Server & serv) {
 	struct pollfd						poll_fd;
 
 	int timeout = 1 * 1000; // 3 min (3 * 60 * 1000)
+	signal(SIGPIPE, handler);
 
 	// std::vector<SocketTCP> sockets = SocketTCP::getSockets();
 	// adding sockets
@@ -88,24 +91,26 @@ int loop (Server & serv) {
 	}
 //	std::cout << "adress of sssions: " << &tcpSessions << std::endl;
 	while (1) {
+		std::cout << "\r\t\t\t\t\t\t\t\t\t\t\t sessions:" << io_sessions.size();
 		int rc = poll(&fds[0], fds.size(), timeout);
 		if (rc < 0)
 			perror("poll error");
-
 //		std::cout << "Status: " << "fds:" << fds.size();
-//		std::cout << " sessions:" << sessions.size();
 //		std::cout << " poll=" << rc << std::endl
 
+//		std::cout.flush();
 		for (int i = 0; i < io_sessions.size(); i++) {
-			if ( ! (fds[i].revents & ( POLLIN | POLLOUT ) ) )// == 0 ??
-				continue;
+//			if ( ! (fds[i].revents & ( POLLIN | POLLOUT ) ) )// == 0 ??
+//				continue;
 			//log("\tprocessing fd=", fds[i].fd);
 			//log("\tprocessing fd=", fds[i].fd);
 			io_sessions[i]->counter++;
 			//std::cout << i << std::endl;
-			/// fds[i].revents != events => Error
-			/// this is expected if (fds[i].revents & POLLIN)
-			if (io_sessions[i]->getFd() == LISTENING_SESSION && ( fds[i].revents & POLLIN )) {
+			// fds[i].revents != events => Error
+			// this is expected if (fds[i].revents & POLLIN)
+			if (io_sessions[i]->getFd() == LISTENING_SESSION ) {
+				if ( !(fds[i].revents & POLLIN ))
+					continue;
 //				poll_fd.fd = accept(fds[i].fd, NULL, NULL);
 				struct sockaddr_in client_addr;
 				socklen_t len = sizeof(client_addr);
@@ -160,9 +165,11 @@ int loop (Server & serv) {
 //				log("cgi failed", poll_fd.fd);
 //			}
 			else if (ret != SUCCESS) {
-				log(BLUE" closing connection fd=", poll_fd.fd, RESET);
+				log(BLUE" closing connection fd=", fds[i].fd, RESET);
 //				close_connection(sessions, fds);
-				close(fds[i].fd);
+				int closed = close(fds[i].fd);
+				log(BLUE" closed=", closed, RESET);
+				std::cout.flush();
 				// https://stackoverflow.com/questions/9927163/erase-element-in-vector-while-iterating-the-same-vector
 				io_sessions.erase(io_sessions.begin() + i);
 				fds.erase(fds.begin() + i);
@@ -178,7 +185,7 @@ int loop (Server & serv) {
 int main() {
 
 	Server serv;
-	ParserConfig parser("conf");
+	ParserConfig parser("home_conf");
 	if (parser.parse_file() == EXIT_FAILURE
 	|| serv.create(parser.configs) == EXIT_FAILURE )
 		return EXIT_FAILURE;

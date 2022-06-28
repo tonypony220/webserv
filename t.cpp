@@ -58,4 +58,20 @@ int main () {
 	filenames.push_back("youpi.bad_extension");
 	find_file(filenames, "/Users/mehtel/coding/webserv", result);
 	cout << "<<<<<<<<" << result << "\n";
+
+	vector<int> arr;
+	for (int i=0; i<100; i++) arr.push_back(i);
+
+	for (int i=0; i<arr.size(); i++) {
+		cout << "(" << i << ")";
+//		cout << "(" << arr.size() << ")";
+		if (arr[i] & 1) {
+			arr.erase(arr.begin() + i);
+			i--;
+			continue;
+		}
+		cout << arr[i] << " ";
+	}
+
+
 }

@@ -85,7 +85,7 @@ class HttpParser {
 	HttpParser( Server * serv ) 
 		: state(PARSE_START_LINE),
 		  length(0), 
-		  verbose(true), 
+		  verbose(true),
 		  code(0), 
 		  counter(0),
 		  chunk_size_parsed(false),

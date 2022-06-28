@@ -201,6 +201,7 @@ public:
 		if (configs.empty())
 			err_msg << "no servers to be run";
 
+		file.close();
 		if ( err_msg.rdbuf()->in_avail() ) {
 			std::cerr << RED << "config error: " << err_msg.rdbuf() << RESET"\n";
 			return EXIT_FAILURE;

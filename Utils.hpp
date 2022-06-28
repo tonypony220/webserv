@@ -140,6 +140,11 @@ void p(T a) {
 	std::cout << std::endl;
 }
 
+void handler(int s) {
+	printf("Caught SIGPIPE\n");
+}
+
+
 template <class T> 
 void log(const T & t) { std::cout << t << std::endl; }
 
