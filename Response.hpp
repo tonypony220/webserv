@@ -399,6 +399,9 @@ class HttpResponse : public HttpParser {
 //		response += "Content-Type: text/html\r\n";
 		//response += "Connection: close\r\n";
 		response += "Server: "+server_ptr->app_name+"\r\n";
+		if (config->enable_session && session_id == 0) {
+			response += "Set-Cookie: id="+ generate_session_id() +"\r\n";
+		}
 		if ( file_type == "html" )
 			response += "Content-type: text/html\r\n";
 		if ( type != CGI ) {

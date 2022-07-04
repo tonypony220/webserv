@@ -287,6 +287,9 @@ public:
 		}
 		return EXIT_SUCCESS;
 	}
+	std::string generate_session_id() {
+
+	}
 
 	void set_server_name(std::string & name) { app_name = name; }
 

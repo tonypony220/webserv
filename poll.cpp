@@ -9,6 +9,8 @@
 #include <unordered_map>
 #include <sys/socket.h>
 #include <arpa/inet.h>
+// POLL example
+//https://www.ibm.com/docs/en/i/7.4?topic=designs-using-poll-instead-select
 
 // pollfd orig structure
 //

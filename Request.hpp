@@ -55,7 +55,9 @@ class HttpParser {
 	unsigned int 	code;
 // maybe better to store not splited headers
 	std::map< std::string, std::string > headers;
+	std::map< std::string, std::string > cookies;
 
+	size_t			session_id;
 	std::string 	method;
 	std::string 	target;
 	std::string		path;
@@ -88,6 +90,7 @@ class HttpParser {
 		  verbose(true),
 		  code(0), 
 		  counter(0),
+		  session_id(0),
 		  chunk_size_parsed(false),
 		  server_ptr(serv) {
 		verbose && std::cout << "HttpParser created"  << std::endl; 
@@ -291,7 +294,10 @@ class HttpParser {
 			setCode(HttpStatus::BadRequest, "Bad field or dquote");
 			return ERROR;
 		}
-		headers.insert(headersPair(key, buffer));
+		if (key == "cookie")
+			parseCookies(buffer);
+		else
+			headers.insert(headersPair(key, buffer));
 		return SUCCESS;
 	}
 	void match_config_and_location() {
@@ -328,6 +334,37 @@ class HttpParser {
 //		if (location->redirect_uri.size())
 //			setCode(HttpStatus::TemporaryRedirect, "redirect");
 //	}
+
+	// a=f
+	// a=f ; b=c
+	// af
+	// af ; v = 4
+	int parseCookies(std::string & buffer) {
+		std::string::size_type colon = buffer.find(";");
+		std::string::size_type eq = buffer.find("=");
+		size_t 				   start = 0;
+
+		if (eq == std::string::npos)
+			return ERROR;
+
+		while (eq != std::string::npos) {
+			if (colon != std::string::npos && eq > colon)
+				return ERROR;
+			size_t end = buffer.size();
+			if (colon != std::string::npos)
+				end = colon;
+			if (eq-start==0 || end-eq==0)
+				return ERROR;
+			std::string key = buffer.substr(start, eq-start);
+			std::string val = buffer.substr(eq + 1,  end-eq);
+			if (!cookies.insert(headersPair(key, val))->second)
+				return ERROR; // duplicate
+			start = end;
+			colon = buffer.find(";", start);
+			eq = buffer.find("=", start);
+		}
+		return SUCCESS;
+	}
 
 	void validateHeaders() {
 		headerItor te = headers.find("transfer-encoding");
