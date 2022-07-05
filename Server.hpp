@@ -219,7 +219,22 @@ public:
 		return false;
 	}
 
+	void display_configs_addresses() { // debuging
+		for (int i = 0; i < configs.size(); i++)
+			std::cout << "config* = " << &configs[i] << "\n";
+
+		std::map<int, std::vector<Server_config*> >::iterator it = mapping.begin();
+		for (; it != mapping.end(); it++) {
+			for (int i = 0; i < it->second.size(); i++)
+				std::cout << "port config = " << it->second[i] << "\n";
+		}
+
+	}
+
+	Server_config * get_default_config() { return &configs[0]; }
+
 	Server_config * match_config(std::string name, int port) {
+//		display_configs_addresses();
 		if (!port)
 			return &configs[0];
 		std::vector<Server_config*> conf = mapping[port];
@@ -234,6 +249,7 @@ public:
 		std::cout << "<<<<<<<<< saved config" << conf[i] << "\n";
 		return conf[i]; // default
 	}
+
 	void validate_config(Server_config & config) {
 		if (ok() && config.root.empty())
 			err << "root required";
@@ -248,6 +264,7 @@ public:
 			config.locs[i].validate(err);
 		}
 	}
+
 	bool ok() { return !err.rdbuf()->in_avail(); }
 
 	int error() {
@@ -288,7 +305,7 @@ public:
 		return EXIT_SUCCESS;
 	}
 	std::string generate_session_id() {
-
+		return "1";
 	}
 
 	void set_server_name(std::string & name) { app_name = name; }

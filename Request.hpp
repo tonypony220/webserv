@@ -92,7 +92,8 @@ class HttpParser {
 		  counter(0),
 		  session_id(0),
 		  chunk_size_parsed(false),
-		  server_ptr(serv) {
+		  server_ptr(serv),
+		  config(serv->get_default_config()) {
 		verbose && std::cout << "HttpParser created"  << std::endl; 
 	}
 	HttpParser( const HttpParser & copy ) { *this = copy; }
@@ -291,11 +292,11 @@ class HttpParser {
 		buffer.erase(0, pos + 1);
 		trim(buffer);
 		if ( unpack_dequtes(buffer) == EXIT_FAILURE ) {
-			setCode(HttpStatus::BadRequest, "Bad field or dquote");
+			setCode(HttpStatus::BadRequest, "Bad field or quote");
 			return ERROR;
 		}
 		if (key == "cookie")
-			parseCookies(buffer);
+			return parseCookies(buffer); // ERROR | SUCCESS;
 		else
 			headers.insert(headersPair(key, buffer));
 		return SUCCESS;
@@ -339,6 +340,7 @@ class HttpParser {
 	// a=f ; b=c
 	// af
 	// af ; v = 4
+	// ==== ;
 	int parseCookies(std::string & buffer) {
 		std::string::size_type colon = buffer.find(";");
 		std::string::size_type eq = buffer.find("=");
@@ -346,18 +348,17 @@ class HttpParser {
 
 		if (eq == std::string::npos)
 			return ERROR;
-
 		while (eq != std::string::npos) {
 			if (colon != std::string::npos && eq > colon)
 				return ERROR;
 			size_t end = buffer.size();
 			if (colon != std::string::npos)
 				end = colon;
-			if (eq-start==0 || end-eq==0)
+			if ( eq-start==0 || end-eq==0 )
 				return ERROR;
 			std::string key = buffer.substr(start, eq-start);
 			std::string val = buffer.substr(eq + 1,  end-eq);
-			if (!cookies.insert(headersPair(key, val))->second)
+			if (!cookies.insert(headersPair(key, val)).second)
 				return ERROR; // duplicate
 			start = end;
 			colon = buffer.find(";", start);

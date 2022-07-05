@@ -128,12 +128,12 @@ class HttpResponse : public HttpParser {
 		return SUCCESS;
 	}
 	int error_page_exists() {
-		std::string err_path = 	config->error_pages_path + "/"
+		std::string err_path = config->error_pages_path + "/"
 								+ itoa(code) + ".html";
 		clear_path(err_path);
 		struct stat s;
 		bool exists = stat( err_path.c_str(), &s ) == EXIT_SUCCESS;
-		log("error page exists ", err_path, exists);
+		log("error page exists ", exists);
 		if (exists) {
 			length = s.st_size;
 			open_file_to_read(err_path);
@@ -150,6 +150,7 @@ class HttpResponse : public HttpParser {
 			setCode(HttpStatus::OK);
 		if ( code > 300 && !(type & FILE_ERROR) ) {
 //			log(BLUE"response error READY "RESET, get_state_type_str());
+			log(BLUE"config ptr="RESET, config);
 			if ( config->error_pages_path.size() && error_page_exists()) {
 				type = FILE | HTML | FILE_ERROR;
 				return 0;
@@ -400,7 +401,7 @@ class HttpResponse : public HttpParser {
 		//response += "Connection: close\r\n";
 		response += "Server: "+server_ptr->app_name+"\r\n";
 		if (config->enable_session && session_id == 0) {
-			response += "Set-Cookie: id="+ generate_session_id() +"\r\n";
+			response += "Set-Cookie: id="+ server_ptr->generate_session_id() +"\r\n";
 		}
 		if ( file_type == "html" )
 			response += "Content-type: text/html\r\n";
