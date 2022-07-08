@@ -4,6 +4,7 @@
 //#include "Request.hpp"
 #include <algorithm>
 #include <map>
+#include <unordered_map>
 #include <vector>
 #include <algorithm>
 #include <set>
@@ -203,6 +204,7 @@ public:
 	std::set<int> 								 ports;
 	std::string 								 app_name;
 	std::map<int, std::vector<Server_config*> >  mapping;
+//	std::unordered_map<int, std::vector<Server_config*> >  mp;
 
 	std::stringstream err;
 
@@ -228,7 +230,6 @@ public:
 			for (int i = 0; i < it->second.size(); i++)
 				std::cout << "port config = " << it->second[i] << "\n";
 		}
-
 	}
 
 	Server_config * get_default_config() { return &configs[0]; }
@@ -298,15 +299,33 @@ public:
 	int create(std::vector<Server_config> & parser_configs) {
 		configs.reserve(parser_configs.size());
 		for ( size_t i = 0; i < parser_configs.size(); i++ ) {
-			if (add_config(parser_configs[i])) {
+			if (add_config(parser_configs[i]))
 				return EXIT_FAILURE;
-			}
 		}
 		return EXIT_SUCCESS;
 	}
 	std::string generate_session_id() {
-		return "1";
+		std::stringstream ss;
+
+		srand(time(NULL) + rand());
+//		for(int i = 0;i < 64;i++)
+//		{
+//			int j = rand();
+////			while(j < 32)
+////				j = rand() % 127;
+//			ss << std::hex << j;
+////			ss << char(j);
+//		}
+		int j = rand();
+//			while(j < 32)
+//				j = rand() % 127;
+		ss << std::hex << j;
+		return ss.str();
 	}
+
+//	size_t parse_session_id(std::string & s) {
+//
+//	}
 
 	void set_server_name(std::string & name) { app_name = name; }
 

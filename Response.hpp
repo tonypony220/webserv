@@ -566,6 +566,15 @@ class HttpResponse : public HttpParser {
 		setenv("QUERY_STRING", query_string.c_str(), 1);
 		setenv("REQUEST_METHOD", method.c_str(), 1);
 		setenv("PATH_INFO", (path).c_str(), 1);
+		if (config->enable_session && !cookies.empty()) {
+			std::stringstream ss;
+			headerItor it = cookies.begin();
+			for (; it != cookies.end(); it++)
+				ss << it->first << "=" << it->second << ";";
+			setenv("HTTP_COOKIE", ss.str().c_str(), 1);
+
+		}
+
 //		if (const char* env_p = std::getenv("QUERY_STRING"))
 //			std::cout << "Your QUERY_STRING is: " << env_p << '\n';
 //		else

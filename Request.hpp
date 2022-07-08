@@ -376,6 +376,11 @@ class HttpParser {
 			setCode(HttpStatus::BadRequest, "both content-length and encoding headers");
 			return ;
 		}
+//		headerItor cookies_it = cookies.find("id");
+
+//		if ( cookies_it != cookies.end() ) {
+//			session_id = server_ptr->parse_session_id(cookies_it->second);
+//		}
 		if ( headers.find("host") == headers.end() ) {
 			setCode(HttpStatus::BadRequest, "host header is missing");
 			return ;
@@ -523,6 +528,11 @@ class HttpParser {
 		o << "\theaders: " << std::endl;
 //		std::map< std::string, std::string>::iterator it;
 		for (headerItor it = headers.begin(); it != headers.end(); it++) {
+			o << "\t\t" << it->first << ": " << it->second << std::endl;
+		}
+		o << "\tcookies: " << std::endl;
+//		std::map< std::string, std::string>::iterator it;
+		for (headerItor it = cookies.begin(); it != cookies.end(); it++) {
 			o << "\t\t" << it->first << ": " << it->second << std::endl;
 		}
 		o << "\tcounter:" << counter << std::endl;
