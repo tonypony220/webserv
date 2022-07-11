@@ -2,10 +2,11 @@ server {
     server_name serv.org www.serv.org
     listen 2001
 
-    client_max_body_size 5
+#    client_max_body_size 500
     root /Users/tonypony/coding/web/
     enable_session
     error_page /Users/tonypony/coding/web/err_pages
+
     location / {
         index index.html
         allowed_methods   GET
@@ -18,14 +19,9 @@ server {
         redirect http://google.com
     }
 
-    location /put_test/ {
-        root              /Users/tonypony/coding/web/
-        allowed_methods   PUT
-    }
-
     location /upload/ {
-        root              /Users/tonypony/coding/web/
-        allowed_methods   POST DELETE
+        root              /Users/tonypony/coding/web/tmp/
+        allowed_methods   PUT POST DELETE
     }
 
     location /cgi {

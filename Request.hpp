@@ -137,6 +137,11 @@ class HttpParser {
 //		int checkState() {
 //			return 1;
 //		}
+	void socket_eof() {
+		log(BLUE"got EOF");
+		if (state < DONE)
+			setCode(HttpStatus::BadRequest, "EOF");
+	}
 
 	int parseInput(std::vector<BYTE> & input) {
 		counter++;
@@ -537,6 +542,7 @@ class HttpParser {
 		}
 		o << "\tcounter:" << counter << std::endl;
 		o << "\tbuffer:" << buffer << std::endl;
+		o << "\tbyte buffer size: " << request_buffer.size() << std::endl;
 		o << RESET << std::endl;
 	}
 };

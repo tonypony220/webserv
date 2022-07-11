@@ -43,6 +43,7 @@ class HttpResponse : public HttpParser {
 	}
 	HttpResponse( const HttpResponse & copy ) : HttpParser(copy) { *this = copy; }
 	~HttpResponse( void ) { verbose && std::cout << "HttpResponse destructed, fd: "  << std::endl; }
+
 ///		HttpResponse & operator=( const HttpResponse & other ) {
 ///			fd = other.getFd();
 ///			request = other.getRequest();
@@ -150,6 +151,7 @@ class HttpResponse : public HttpParser {
 			setCode(HttpStatus::OK);
 		if ( code > 300 && !(type & FILE_ERROR) ) {
 //			log(BLUE"response error READY "RESET, get_state_type_str());
+			resp_state = STATE_NONE;
 			log(BLUE"config ptr="RESET, config);
 			if ( config->error_pages_path.size() && error_page_exists()) {
 				type = FILE | HTML | FILE_ERROR;
@@ -215,7 +217,8 @@ class HttpResponse : public HttpParser {
 			return response_buffer.size();
 		}
 		if ( type & FILE ) {
-//			log(BLUE"response FILE "RESET, get_state_type_str());
+			log(BLUE"response FILE "RESET, get_state_type_str());
+			log(BLUE"state"RESET, resp_state);
 //			if ( !response.empty() )
 			if ( resp_state < STATE_WAIT ) {
 				fill_buffer_to_send();

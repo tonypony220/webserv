@@ -218,30 +218,35 @@ public:
 			ret = readSocket();
 			if (ret == END) {
 				read_eof = true;
+				requests[current_request].socket_eof();
 				ret = SUCCESS;
 			}
-//			if (ret == ERROR)
-//				return ERROR;
-//			if (ret == END)
-//				ret = SUCCESS;
-		}
-		if (!read_eof &&  requests[current_request].isComplete()) {
-			HttpResponse resp = HttpResponse(requests[current_request]);
-			std::cout << resp << std::endl;
-			responses.push_back(resp);
-			resp_start = std::time(nullptr);
-			requests.clear();
-			add_request();
-//			current_request++;
+			if (requests[current_request].isComplete()) {
+				HttpResponse resp = HttpResponse(requests[current_request]);
+				std::cout << resp << std::endl;
+				responses.push_back(resp);
+				resp_start = std::time(nullptr);
+//				requests.clear();
+				if (!read_eof) { /* keep-alive not works for now anyway */
+					add_request();
+//					current_request++;
+				}
+			}
 		}
 		std::cout.precision(40);
 //		std::cout << "difftime=" << difftime( time(nullptr), start ) << std::endl;
 //		std::cout << "requests=" << requests.size() << std::endl;
 //		std::cout << "responses=" << responses.size() << std::endl;
 //		printf("%.f seconds have passed since the beginning of the month.\n", difftime( time(nullptr), start ));
-		if (difftime( time(nullptr), start ) > DEFAULT_REQUEST_TIMEOUT) {
+		if (!requests[current_request].isComplete()
+		&& difftime( time(nullptr), start ) > DEFAULT_REQUEST_TIMEOUT) {
 			requests[current_request].setCode(
 					HttpStatus::RequestTimeout, "timeout");
+			HttpResponse resp = HttpResponse(requests[current_request]);
+			std::cout << resp << std::endl;
+			responses.push_back(resp);
+			resp_start = std::time(nullptr);
+//			requests.clear();
 		}
 		// TODO
 //		if (requests[current_request].isComplete() && !buffer.empty()) {
