@@ -32,7 +32,7 @@ server {
     location /cgi {
         autoindex on
         root /Users/mehtel/coding/webserv/cgi
-        cgi cgi py
+        cgi sh py
         #cgi_timeout 5
     }
 }

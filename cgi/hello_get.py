@@ -12,7 +12,7 @@ last_name  = form.getvalue('last_name')
 
 print("Content-type:text/html\r\n\r\n")
 
-pprint.pprint(environ.get("QUERY_STRING"))
+# pprint.pprint(environ.get("QUERY_STRING"))
 print("<html>")
 print("<head>")
 print("<title>Hello - Second CGI Program</title>")

@@ -41,8 +41,13 @@ class HttpResponse : public HttpParser {
 		verbose && std::cout << "HttpResponse created"  << std::endl;
 		init_response();
 	}
-	HttpResponse( const HttpResponse & copy ) : HttpParser(copy) { *this = copy; }
-	~HttpResponse( void ) { verbose && std::cout << "HttpResponse destructed, fd: "  << std::endl; }
+	HttpResponse( const HttpResponse & copy ) : HttpParser(copy) {
+		verbose && std::cout << PURPLE"HttpResponse copied, fd: "RESET << std::endl;
+		*this = copy;
+	}
+	~HttpResponse( void ) {
+		verbose && std::cout << "HttpResponse destructed, fd: " << std::endl;
+	}
 
 ///		HttpResponse & operator=( const HttpResponse & other ) {
 ///			fd = other.getFd();
@@ -119,7 +124,7 @@ class HttpResponse : public HttpParser {
 	int wait_process() {
 		int status;
 		int ret = waitpid(pid, &status, WNOHANG);
-		std::cout << YELLOW"\rret waitpid=" << ret<< RESET;
+		std::cout << YELLOW"\rret of pid=" << pid << " waitpid=" << ret<< RESET;
 		if ( ret != 0
 		||  (WIFEXITED(status) && WEXITSTATUS(status) > 0)
 		||  WIFSIGNALED(status)) {
@@ -218,15 +223,15 @@ class HttpResponse : public HttpParser {
 		}
 		if ( type & FILE ) {
 			log(BLUE"response FILE "RESET, get_state_type_str());
-			log(BLUE"state"RESET, resp_state);
+			log(BLUE"state="RESET, resp_state);
 //			if ( !response.empty() )
 			if ( resp_state < STATE_WAIT ) {
 				fill_buffer_to_send();
 				resp_state = STATE_WAIT;
 			}
 			if ( fd > 0 && read_from_file() != SUCCESS ) {
-				log(BLUE"file reading is done"RESET);
-				close(fd);
+				int ret = close(fd);
+				log(BLUE"file reading is done. closed=", !ret, RESET);
 				fd = -1;
 				resp_state = STATE_READY;
 			}
@@ -241,13 +246,14 @@ class HttpResponse : public HttpParser {
 		return response_buffer.size();
 	}
 	void abort() {
-		log(RED"aborting");
-		type |= TIMEOUT_ERROR;
-		if ( (type & CGI) && pid )
+		log(RED"aborting"RESET);
+//		type |= TIMEOUT_ERROR;
+		if ( (type & CGI) && pid ) {
+			log(RED"killing ", pid, RESET);
 			kill(pid, SIGKILL);
+		}
 		if (fd > -1)
 			close(fd);
-
 	}
 
 	bool completed() const {
@@ -255,8 +261,10 @@ class HttpResponse : public HttpParser {
 //		log("state=", state);
 //		if ( (type & CGI) &&  )
 //		std::cout << "\r\t\t\t\t\t\t\tresp state=" << resp_state;
-		return (resp_state == STATE_READY
-				&& response_buffer.empty()) || type & TIMEOUT_ERROR;
+		bool r = (resp_state == STATE_READY && response_buffer.empty());
+//		if (r && fd > -1 ) close(fd);
+		return r;
+				//||  type & TIMEOUT_ERROR; //resp_state == STATE_DONE ;
 //		if ( cgi_state >= CGI_STATE_DONE )
 //			return true;
 //		if ( file_state ) {
@@ -464,7 +472,7 @@ class HttpResponse : public HttpParser {
 
 	void init_response() {
 		// starting response creating
-		// this makes internal response.
+		// this makes internal re.
 		// to get start write call get response
 		fd = -1; // initialization
 		length = 0; // initialization
@@ -494,10 +502,12 @@ class HttpResponse : public HttpParser {
 			} else if ( method == "DELETE" ) { // TODO
 				// unlink
 //				get_path_from_target();
-				int ret = unlink(target.c_str());
-				if ( ret != 0 )
-					setCode(HttpStatus::InternalServerError, "delete failed");
-				else {
+				int ret = unlink(path.c_str());
+				if ( ret != 0 ) {
+					std::stringstream s;
+					s << "delete failed: " << strerror(errno);
+					setCode(HttpStatus::InternalServerError, s.str());
+				} else {
 					setCode(HttpStatus::NoContent);
 					fill_buffer_to_send();
 					resp_state = STATE_READY;
@@ -549,7 +559,7 @@ class HttpResponse : public HttpParser {
 		}
 		args.push_back(0);
 
-		int pid = fork();
+		pid = fork();
 		/* The parent`s new pid will be 0 */
 		if (pid == 0) {
 			/* We are now in a child progress
@@ -592,8 +602,12 @@ class HttpResponse : public HttpParser {
 			args.push_back("python3");
 			args.push_back(path);
 		}
-		else if (file_type == "cgi" || file_type == "sh")
+		else if (file_type == "cgi")
 			args.push_back("./" + path);
+		else if (file_type == "sh") {
+			args.push_back("sh");
+			args.push_back(path);
+		}
 //			executable = "./" + target;
 
 //		std::string exec_name("python3");

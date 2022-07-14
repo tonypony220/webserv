@@ -187,7 +187,7 @@ int loop (Server & serv) {
 				log(BLUE" closing connection fd=", fds[i].fd, RESET);
 //				close_connection(sessions, fds);
 				int closed = close(fds[i].fd);
-				log(BLUE" closed=", closed, RESET);
+				log(BLUE" closed=", !closed, RESET);
 //				std::cout.flush();
 				// https://stackoverflow.com/questions/9927163/erase-element-in-vector-while-iterating-the-same-vector
 				std::vector<sptr<IOInterface> >::iterator x;
