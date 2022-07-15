@@ -94,11 +94,11 @@ class HttpParser {
 		  chunk_size_parsed(false),
 		  server_ptr(serv),
 		  config(serv->get_default_config()) {
-		verbose && std::cout << "HttpParser created"  << std::endl; 
+//		verbose && std::cout << "HttpParser created"  << std::endl;
 	}
 	HttpParser( const HttpParser & copy ) { *this = copy; }
 	~HttpParser( void ) { 
-		verbose && std::cout << "HttpParser destructed"  << std::endl;
+//		verbose && std::cout << "HttpParser destructed"  << std::endl;
 	}
 ///		HttpParser & operator=( const HttpParser & other ) {
 ///			fd = other.getFd();

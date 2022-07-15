@@ -38,15 +38,15 @@ class HttpResponse : public HttpParser {
   public:
 //	HttpResponse() : HttpParser() { verbose && std::cout << "HttpResponse created"  << std::endl; }
 	HttpResponse(const HttpParser & copy) : HttpParser(copy) {
-		verbose && std::cout << "HttpResponse created"  << std::endl;
+//		verbose && std::cout << "HttpResponse created"  << std::endl;
 		init_response();
 	}
 	HttpResponse( const HttpResponse & copy ) : HttpParser(copy) {
-		verbose && std::cout << PURPLE"HttpResponse copied, fd: "RESET << std::endl;
+//		verbose && std::cout << PURPLE"HttpResponse copied, fd: "RESET << std::endl;
 		*this = copy;
 	}
 	~HttpResponse( void ) {
-		verbose && std::cout << "HttpResponse destructed, fd: " << std::endl;
+//		verbose && std::cout << "HttpResponse destructed, fd: " << std::endl;
 	}
 
 ///		HttpResponse & operator=( const HttpResponse & other ) {
@@ -231,7 +231,9 @@ class HttpResponse : public HttpParser {
 			}
 			if ( fd > 0 && read_from_file() != SUCCESS ) {
 				int ret = close(fd);
-				log(BLUE"file reading is done. closed=", !ret, RESET);
+				std::stringstream ss;
+				ss<<BLUE"file reading is done. closed="<<!ret<<" fd="<<fd<<RESET;
+				log(ss.str());
 				fd = -1;
 				resp_state = STATE_READY;
 			}
@@ -254,6 +256,9 @@ class HttpResponse : public HttpParser {
 		}
 		if (fd > -1)
 			close(fd);
+//		if (type & FILE)
+//			resp_state = STATE_READY;
+
 	}
 
 	bool completed() const {
@@ -468,6 +473,8 @@ class HttpResponse : public HttpParser {
 			log(RED"read file open error: ", strerror(errno),RESET);
 			setCode(HttpStatus::InternalServerError, "open failed");
 		}
+		else
+			log(PURPLE"--opened file fd=", fd, RESET);
 	}
 
 	void init_response() {

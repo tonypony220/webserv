@@ -41,63 +41,65 @@ check_fds() {
 }
 ##https://manpages.ubuntu.com/manpages/kinetic/en/man1/siege.1.html
 echo "expected code 200"
-siege -c 5 -r 1 http://localhost:2001/
+siege -c 50 -r 1 http://localhost:2001/
 exit_ok
 check_fds
 
-#echo "expected code 404"
-#siege -c 25 -r 1 http://localhost:2001/a
-#exit_ok
-#check_fds
-#
-#echo "expected code 200"
-#siege -c 25 -r 1 http://localhost:2001/tmp/screenshot.png
-#exit_ok
-#check_fds
-#
-#echo -e "\t\t*** chunked upload check *** "
-#code=$(curl -s -o /dev/null -w "%{http_code}" -H "Transfer-Encoding: chunked" -d @t.cpp localhost:2001)
-#code_ok "405"
-#exit_ok
-#check_fds
-#curl -T t.cpp localhost:2001
-#code=$(curl -s -o /dev/null -w "%{http_code}" -T t.cpp localhost:2001/upload/)
-#code_ok "204"
-#exit_ok
-#
-#curl -T t.cpp localhost:2001
-#code=$(curl -s -o /dev/null -w "%{http_code}" -T tmp/screenshot.png localhost:2001/upload/)
-#code_ok "413"
-#exit_ok
-#
-#code=$(curl -s -o /dev/null -w "%{http_code}" -X DELETE localhost:2001/upload/t.cpp)
-#code_ok "204"
-#exit_ok
-#
-#code=$(curl -s -o /dev/null -w "%{http_code}" -X DELETE localhost:2001/upload/t.cpp)
-#code_ok "404"
-#exit_ok
-#
-#code=$(curl -s -o /dev/null -w "%{http_code}" -d @t.cpp localhost:2001/upload/sfile)
-#code_ok "204"
-#exit_ok
-#
-#code=$(curl -s -o /dev/null -w "%{http_code}" -H "Transfer-Encoding: chunked" -d @t.cpp localhost:2001/upload/somefile)
-#code_ok "204"
-#exit_ok
-#
-#code=$(curl -s -o /dev/null -w "%{http_code}"  -H "Transfer-Encoding: chunked" -T t.cpp localhost:2001/upload/)
-#code_ok "204"
-#exit_ok
-#check_fds
-#
-# echo "expected code 200"
-# siege -c 25 -r 1 http://localhost:2001/cgi/hello_get.py
-# exit_ok
-# check_fds
+echo "expected code 404"
+siege -c 25 -r 1 http://localhost:2001/a
+exit_ok
+check_fds
+
+echo "expected code 200"
+siege -c 25 -r 1 http://localhost:2001/tmp/screenshot.png
+exit_ok
+check_fds
+
+echo -e "\t\t*** chunked upload check *** "
+code=$(curl -s -o /dev/null -w "%{http_code}" -H "Transfer-Encoding: chunked" -d @t.cpp localhost:2001)
+code_ok "405"
+exit_ok
+check_fds
+
+
+code=$(curl -s -o /dev/null -w "%{http_code}" -T t.cpp localhost:2001/upload/)
+code_ok "204"
+exit_ok
+
+
+code=$(curl -s -o /dev/null -w "%{http_code}" -T tmp/screenshot.png localhost:2001/upload/)
+code_ok "413"
+exit_ok
+
+code=$(curl -s -o /dev/null -w "%{http_code}" -X DELETE localhost:2001/upload/t.cpp)
+code_ok "204"
+exit_ok
+
+code=$(curl -s -o /dev/null -w "%{http_code}" -X DELETE localhost:2001/upload/t.cpp)
+code_ok "404"
+exit_ok
+
+code=$(curl -s -o /dev/null -w "%{http_code}" -d @t.cpp localhost:2001/upload/sfile)
+code_ok "204"
+exit_ok
+
+code=$(curl -s -o /dev/null -w "%{http_code}" -H "Transfer-Encoding: chunked" -d @t.cpp localhost:2001/upload/somefile)
+code_ok "204"
+exit_ok
+
+code=$(curl -s -o /dev/null -w "%{http_code}"  -H "Transfer-Encoding: chunked" -T t.cpp localhost:2001/upload/)
+code_ok "204"
+exit_ok
+check_fds
+
+ echo "expected code 200"
+ siege -c 25 -r 1 http://localhost:2001/cgi/hello_get.py
+ exit_ok
+ check_fds
 
 echo " ------- put in browser: ---------"
 echo "localhost:2001/form.html"
+curl -T big_ascii_file.cc localhost:2001/upload/
 
 ## curl -H -s -o /dev/null -w "%{http_code}" "Transfer-Encoding: chunked" -d @t.cpp localhost:2001
 ## siege -H "Transfer-Encoding: chunked" -c 1 -r 1 http://localhost:2001/
