@@ -430,7 +430,7 @@ class HttpResponse : public HttpParser {
 //		response += "Content-Type: text/html\r\n";
 		//response += "Connection: close\r\n";
 		response += "Server: "+server_ptr->app_name+"\r\n";
-		if (config->enable_session && session_id == 0) {
+		if (config->enable_session && session_id.empty()) {
 			response += "Set-Cookie: id="+ server_ptr->generate_session_id() +"\r\n";
 		}
 		if ( file_type == "html" )
@@ -600,13 +600,16 @@ class HttpResponse : public HttpParser {
 		setenv("QUERY_STRING", query_string.c_str(), 1);
 		setenv("REQUEST_METHOD", method.c_str(), 1);
 		setenv("PATH_INFO", (path).c_str(), 1);
-		if (config->enable_session && !cookies.empty()) {
-			std::stringstream ss;
-			headerItor it = cookies.begin();
-			for (; it != cookies.end(); it++)
-				ss << it->first << "=" << it->second << ";";
-			setenv("HTTP_COOKIE", ss.str().c_str(), 1);
-
+		if (config->enable_session) { // && !cookies.empty()) {
+			if (!cookies.empty()) {
+				std::stringstream ss;
+				headerItor it = cookies.begin();
+				for (; it != cookies.end(); it++)
+					ss << it->first << "=" << it->second << ";";
+				setenv("HTTP_COOKIE", ss.str().c_str(), 1);
+			} else {
+				unsetenv("HTTP_COOKIE");
+			}
 		}
 
 //		if (const char* env_p = std::getenv("QUERY_STRING"))

@@ -58,7 +58,7 @@ class HttpParser {
 	std::map< std::string, std::string > headers;
 	std::map< std::string, std::string > cookies;
 
-	size_t			session_id;
+	std::string		session_id;
 	std::string 	method;
 	std::string 	target;
 	std::string		path;
@@ -68,7 +68,7 @@ class HttpParser {
 	std::string 	transfer_encoding;
 	unsigned long 	length; // content lenght
 	unsigned long 	counter;
-	size_t 			chunk_size; // current chunk size 
+	size_t 			chunk_size; // current chunk size
 	bool			chunk_size_parsed;
 	Server_config	*config;
 	Location		*location;
@@ -91,7 +91,7 @@ class HttpParser {
 		  verbose(true),
 		  code(0), 
 		  counter(0),
-		  session_id(0),
+		  session_id(""),
 		  chunk_size_parsed(false),
 		  server_ptr(serv),
 		  config(serv->get_default_config()) {
@@ -366,6 +366,10 @@ class HttpParser {
 				return ERROR;
 			std::string key = buffer.substr(start, eq-start);
 			std::string val = buffer.substr(eq + 1,  end-eq);
+			if (key == "id") {
+				session_id = val;
+				log("session id= ", val);
+			}
 			if (!cookies.insert(headersPair(key, val)).second)
 				return ERROR; // duplicate
 			start = end;
