@@ -13,6 +13,7 @@
 #define HEADER 	  		 2
 #define PARSE_BODY		 3
 #define DONE 	  		 4
+#define PUSHED 	  		 5
 
 #define ADD_IFCE		 10
 #define HANDLE_FILE 	 11
@@ -111,6 +112,8 @@ class HttpParser {
 	unsigned int & getState() { return state; }
 
 	bool isComplete() const { return state > PARSE_BODY; }
+	bool beenPushed() const { return state >= PUSHED; }
+	void setBeenPushed() { state = PUSHED; }
 	unsigned int getCode() { return code; }
 
 	int setState(int macroState) {
@@ -396,6 +399,10 @@ class HttpParser {
 			trim(val);
 			isDigits(val) || setCode(HttpStatus::BadRequest);
 			length = ::strtol(cl->second.c_str(), NULL, 10);
+			if (config->max_size && length > config->max_size ) {
+				setCode(HttpStatus::ContentTooLarge, "size > limit");
+				return ;
+			}
 		}
 		if (te != headers.end() ) { 
 			if ( te->second != "chunked" )

@@ -2,7 +2,7 @@ server {
     server_name serv.org www.serv.org
     listen 2001
 
-    client_max_body_size 5
+    #client_max_body_size 2089600
     root /Users/mehtel/coding/webserv/
     enable_session
     error_page /Users/mehtel/coding/webserv/err_pages
@@ -26,7 +26,7 @@ server {
 
     location /upload/ {
         root              /Users/mehtel/coding/webserv/
-        allowed_methods   POST DELETE
+        allowed_methods   GET PUT POST DELETE
     }
 
     location /cgi {

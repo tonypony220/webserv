@@ -41,7 +41,7 @@ check_fds() {
 }
 ##https://manpages.ubuntu.com/manpages/kinetic/en/man1/siege.1.html
 echo "expected code 200"
-siege -c 50 -r 1 http://localhost:2001/
+siege -c 5 -r 1 http://localhost:2001/
 exit_ok
 check_fds
 
@@ -97,9 +97,11 @@ check_fds
  exit_ok
  check_fds
 
-echo " ------- put in browser: ---------"
+echo "\n\n ------- put in browser: ---------"
 echo "localhost:2001/form.html"
-curl -T big_ascii_file.cc localhost:2001/upload/
+
+echo "INT on uploading file" 
+echo "curl -T big_ascii_file.cc localhost:2001/upload/  -> Ctrl-C" 
 
 ## curl -H -s -o /dev/null -w "%{http_code}" "Transfer-Encoding: chunked" -d @t.cpp localhost:2001
 ## siege -H "Transfer-Encoding: chunked" -c 1 -r 1 http://localhost:2001/

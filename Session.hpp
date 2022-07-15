@@ -211,21 +211,28 @@ public:
 		}
 
 	}
+	void add_response() {
+		HttpResponse resp = HttpResponse(requests[current_request]);
+		std::cout << resp << std::endl;
+		requests[current_request].setBeenPushed();
+		responses.push_back(resp);
+		resp_start = std::time(nullptr);
+	}
 
 	int 		 processEvent( short event ) {
 		int ret = SUCCESS;
 		if (!read_eof && (event & POLLIN)) {
+			/* EOF could be in middle of request, and this will make request done at once */
 			ret = readSocket();
 			if (ret == END) {
 				read_eof = true;
 				requests[current_request].socket_eof();
 				ret = SUCCESS;
+//				add_response();
 			}
-			if (requests[current_request].isComplete()) {
-				HttpResponse resp = HttpResponse(requests[current_request]);
-				std::cout << resp << std::endl;
-				responses.push_back(resp);
-				resp_start = std::time(nullptr);
+			if (requests[current_request].isComplete()
+			&& !requests[current_request].beenPushed()) {
+				add_response();
 //				requests.clear();
 				if (!read_eof) { /* keep-alive not works for now anyway */
 					add_request();
@@ -233,7 +240,7 @@ public:
 				}
 			}
 		}
-		std::cout.precision(40);
+//		std::cout.precision(40);
 //		std::cout << "difftime=" << difftime( time(nullptr), start ) << std::endl;
 //		std::cout << "requests=" << requests.size() << std::endl;
 //		std::cout << "responses=" << responses.size() << std::endl;
@@ -242,10 +249,7 @@ public:
 		&& difftime( time(nullptr), start ) > DEFAULT_REQUEST_TIMEOUT) {
 			requests[current_request].setCode(
 					HttpStatus::RequestTimeout, "timeout");
-			HttpResponse resp = HttpResponse(requests[current_request]);
-			std::cout << resp << std::endl;
-			responses.push_back(resp);
-			resp_start = std::time(nullptr);
+			add_response();
 //			requests.clear();
 		}
 		// TODO
@@ -276,11 +280,12 @@ public:
 
 			if ( responses[current_response].completed() ) {
 				//127.0.0.1 - - [13/Jun/2022:19:19:54 +0300] "GET /file HTTP/1.1" 200 0 "-" "curl/7.54.0"
+				std::string color(responses[current_response].been_sent() ? GREEN : RED);
 				const std::time_t now = std::time(nullptr);
 				char buf[64];
 				strftime(buf, sizeof buf, "[%e/%b/%Y:%H:%M:%S %z]",
 			 				std::localtime(&now));
-				std::cout << "\n"GREEN << ip << " - " << buf
+				std::cout << "\n" << color << ip << " - " << buf
 				<< responses[current_response].start_line << "  "
 				<< responses[current_response].short_log_line()
 				<< RESET << std::endl;

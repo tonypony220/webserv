@@ -19,7 +19,7 @@
 #define HTML 16
 #define UPLOAD 32
 #define FILE_ERROR 64
-#define TIMEOUT_ERROR 128
+#define RESPONSE_TIMEOUT_ERROR 128
 
 //#define STATE_DISCOVERED  //1
 #define STATE_NONE  		  10  //2
@@ -148,6 +148,7 @@ class HttpResponse : public HttpParser {
 	}
 
 	int ready_to_write() {
+//		log("\r"BLUE"current state="RESET, resp_state, get_state_type_str());
 		if ( resp_state == STATE_READY ) {
 //			log(BLUE"response state READY "RESET, get_state_type_str());
 			return 1;
@@ -155,9 +156,16 @@ class HttpResponse : public HttpParser {
 		if (!code)
 			setCode(HttpStatus::OK);
 		if ( code > 300 && !(type & FILE_ERROR) ) {
+//			log("type=",type,  get_state_type_str());
+//			if (type & RESPONSE_TIMEOUT_ERROR) {
+//				/* make response ready so it able to */
+//				resp_state = STATE_READY;
+//				response_buffer.clear();
+//				return 1;
+//			}
 //			log(BLUE"response error READY "RESET, get_state_type_str());
 			resp_state = STATE_NONE;
-			log(BLUE"config ptr="RESET, config);
+//			log(BLUE"config ptr="RESET, config);
 			if ( config->error_pages_path.size() && error_page_exists()) {
 				type = FILE | HTML | FILE_ERROR;
 				return 0;
@@ -170,6 +178,8 @@ class HttpResponse : public HttpParser {
 			return 1;
 		}
 		if ( type & UPLOAD ) {
+			/* in case of timeout should wait file
+			 * till it change resp_state -> DONE */
 			if ( resp_state < STATE_DONE )
 				return 0;
 			if ( resp_state == STATE_DONE ) {
@@ -186,6 +196,8 @@ class HttpResponse : public HttpParser {
 			return response_buffer.size();
 		}
 		if ( type & CGI ) {
+			/* in case of timeout should wait pipe
+			 * till it change resp_state -> DONE */
 			if ( resp_state <= STATE_WAIT )
 				return 0;
 			if ( resp_state == STATE_INFC_CREATED ) {
@@ -206,7 +218,7 @@ class HttpResponse : public HttpParser {
 //				return 0;
 			wait_process();
 			if ( resp_state == STATE_DONE && cgi_proc_exited ) {
-				/* state DONE - waiting of pipe. */
+				/* resp_state STATE_DONE -> waiting of pipe. */
 //				log("<<<<<<<<<<<<<<<<");
 				resp_state = STATE_READY;
 //				if ( wait_process() == ERROR ) {
@@ -222,8 +234,6 @@ class HttpResponse : public HttpParser {
 			return response_buffer.size();
 		}
 		if ( type & FILE ) {
-			log(BLUE"response FILE "RESET, get_state_type_str());
-			log(BLUE"state="RESET, resp_state);
 //			if ( !response.empty() )
 			if ( resp_state < STATE_WAIT ) {
 				fill_buffer_to_send();
@@ -249,7 +259,7 @@ class HttpResponse : public HttpParser {
 	}
 	void abort() {
 		log(RED"aborting"RESET);
-//		type |= TIMEOUT_ERROR;
+		type |= RESPONSE_TIMEOUT_ERROR;
 		if ( (type & CGI) && pid ) {
 			log(RED"killing ", pid, RESET);
 			kill(pid, SIGKILL);
@@ -260,16 +270,20 @@ class HttpResponse : public HttpParser {
 //			resp_state = STATE_READY;
 
 	}
+	bool been_sent() {
+		return !(type & RESPONSE_TIMEOUT_ERROR);
+	}
 
 	bool completed() const {
 //		log("buffer: ", buffer.size());
 //		log("state=", state);
 //		if ( (type & CGI) &&  )
 //		std::cout << "\r\t\t\t\t\t\t\tresp state=" << resp_state;
-		bool r = (resp_state == STATE_READY && response_buffer.empty());
+		bool r = (resp_state == STATE_READY &&
+				(response_buffer.empty() ||  type & RESPONSE_TIMEOUT_ERROR));
 //		if (r && fd > -1 ) close(fd);
 		return r;
-				//||  type & TIMEOUT_ERROR; //resp_state == STATE_DONE ;
+				//; //resp_state == STATE_DONE ;
 //		if ( cgi_state >= CGI_STATE_DONE )
 //			return true;
 //		if ( file_state ) {

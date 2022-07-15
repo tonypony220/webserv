@@ -18,7 +18,7 @@ SRCS	=	poll.cpp
 # P_OBJS  =   ${PARSERS:.c=.o}
 
 
-CFLAGS	=   -std=c++98 -O0 -g -fsanitize=address  #-Wall -Wextra -Werror
+CFLAGS	=   -std=c++98 -O0 #-g -fsanitize=address -fsanitize=leak #-Wall -Wextra -Werror
 
 # HEAD	=	minishell.h
 

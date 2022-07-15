@@ -208,7 +208,7 @@ int loop (Server & serv) {
 int main() {
 
 	Server serv;
-	ParserConfig parser("home_conf");
+	ParserConfig parser("conf");
 	if (parser.parse_file() == EXIT_FAILURE
 	|| serv.create(parser.configs) == EXIT_FAILURE )
 		return EXIT_FAILURE;
