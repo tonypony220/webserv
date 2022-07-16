@@ -313,11 +313,12 @@ class HttpParser {
 		std::string host(headers["host"]);
 		std::string::size_type pos(host.find(":"));
 		int port = 0;
-		if ( host.empty() ) {
+		if ( !host.empty() ) {
 			port = atoi(host.substr(pos + 1, host.size()).c_str());
 			host = host.substr(0, pos);
 		}
 		config = server_ptr->match_config( host, port );
+		log("matched config=", config);
 		path = target;
 		location = config->route_target_path(path);
 		clear_path(path);

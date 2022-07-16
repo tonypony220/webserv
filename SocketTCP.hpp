@@ -66,8 +66,9 @@ class SocketTCP {
 
 			rc = bind(fd, (struct sockaddr*) &addr, sizeof(addr));
 			if( rc < 0 ) {
-				buff = std::string("bind error: ") + std::string(std::strerror(errno));
-				std::cerr << buff;
+				buff = std::string("bind error: ")
+					 + std::string(std::strerror(errno));
+				std::cerr << RED << buff << RESET;
 				close(fd);
 				fd = -1;
 				return -1;

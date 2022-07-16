@@ -66,7 +66,6 @@ code=$(curl -s -o /dev/null -w "%{http_code}" -T t.cpp localhost:2001/upload/)
 code_ok "204"
 exit_ok
 
-
 code=$(curl -s -o /dev/null -w "%{http_code}" -T tmp/screenshot.png localhost:2001/upload/)
 code_ok "413"
 exit_ok
@@ -95,8 +94,18 @@ check_fds
  echo "expected code 200"
  siege -c 25 -r 1 http://localhost:2001/cgi/hello_get.py
  exit_ok
- check_fds
 
+echo "\t\t**** checking routing by host name ****\n\n"
+code=$(curl -s -o /dev/null -w "%{http_code}" -T big_ascii_file.cc  localhost:2001/upload/)
+code_ok "204"
+exit_ok
+
+echo "\t\t**** checking routing by host name ****\n\n"
+code=$(curl -s -o /dev/null -w "%{http_code}" -T big_ascii_file.cc  hello.org:2001/upload/)
+code_ok "413"
+exit_ok
+
+check_fds
 echo "\n\n ------- put in browser: ---------"
 echo "localhost:2001/form.html"
 

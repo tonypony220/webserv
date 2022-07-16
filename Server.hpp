@@ -221,9 +221,11 @@ public:
 		return false;
 	}
 
-	void display_configs_addresses() { // debuging
-		for (int i = 0; i < configs.size(); i++)
+	void display_configs_addresses() { // debuging purpose
+		for (int i = 0; i < configs.size(); i++) {
 			std::cout << "config* = " << &configs[i] << "\n";
+			std::cout << configs[i];
+		}
 
 		std::map<int, std::vector<Server_config*> >::iterator it = mapping.begin();
 		for (; it != mapping.end(); it++) {
@@ -236,6 +238,7 @@ public:
 
 	Server_config * match_config(std::string name, int port) {
 //		display_configs_addresses();
+		log("matching config for ", name, " ", port);
 		if (!port)
 			return &configs[0];
 		std::vector<Server_config*> conf = mapping[port];
@@ -254,6 +257,10 @@ public:
 	void validate_config(Server_config & config) {
 		if (ok() && config.root.empty())
 			err << "root required";
+		if (ok() && config.ports.empty())
+			err << "listen ports required";
+		if (ok() && config.locs.empty())
+			err << "no location provided";
 		if (ok() && !valid_dir_path(config.root))
 			err << "bad root: " << config.root << " " << strerror(errno);
 		if (ok()
@@ -302,6 +309,7 @@ public:
 			if (add_config(parser_configs[i]))
 				return EXIT_FAILURE;
 		}
+		display_configs_addresses();
 		return EXIT_SUCCESS;
 	}
 	std::string generate_session_id() {

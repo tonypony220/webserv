@@ -1,26 +1,61 @@
 server {
-    server_name serv.org www.serv.org
-    listen 2001
+   #server_name serv.org www.serv.org
+   listen 2001 2002
 
-    client_max_body_size 2089600
+   client_max_body_size 2089600
+   root /Users/tonypony/coding/web/
+   enable_session
+   error_page /Users/tonypony/coding/web/err_pages
+
+   location / {
+       index index.html
+       allowed_methods   GET
+   }
+   location /images/ {
+       root /Users/tonypony/coding/web/tmp/
+       allowed_methods  PUT POST
+   }
+   location /redir/ {
+       redirect http://google.com
+   }
+
+   location /upload/ {
+       root              /Users/tonypony/coding/web/tmp/
+       allowed_methods  GET PUT POST DELETE
+   }
+
+   location /cgi {
+       autoindex on
+       root /Users/tonypony/coding/web/cgi
+       cgi sh py
+       #cgi_timeout 5
+   }
+}
+
+server {
+    server_name hello.org
+    listen 2001 3001
+
+    client_max_body_size 500
     root /Users/tonypony/coding/web/
-    enable_session
-    error_page /Users/tonypony/coding/web/err_pages
+   # enable_session
+   # error_page /Users/tonypony/coding/web/err_pages
 
-    location / {
-        index index.html
-        allowed_methods   GET
-    }
-    location /images/ {
-        root /Users/tonypony/coding/web/tmp/
-        allowed_methods  PUT POST
-    }
-    location /redir/ {
-        redirect http://google.com
-    }
-
+   # location / {
+   #     index index.html
+   #     allowed_methods   GET
+   # }
+   # location /images/ {
+   #     root /Users/tonypony/coding/web/tmp/
+   #     allowed_methods  PUT POST
+   # }
+   # location /redir/ {
+   #     redirect http://google.com
+   # }
+   #
     location /upload/ {
-        root              /Users/tonypony/coding/web/tmp/
+        autoindex on
+        root              /tmp
         allowed_methods  GET PUT POST DELETE
     }
 
@@ -31,44 +66,3 @@ server {
         #cgi_timeout 5
     }
 }
-
-
-
-
-#server {
-#    server_name serv.org www.serv.org
-#    listen 91
-#
-#    client_max_body_size 5
-#    root /Users/mehtel/coding/webserv/
-#    enable_session
-#    error_page /Users/mehtel/coding/webserv/err_pages
-#    location / {
-#        autoindex on
-#        allowed_methods   GET
-#    }
-#    location /images/ {
-#
-#        root /Users/mehtel/coding/webserv/
-#        allowed_methods   GET
-#    }
-#
-#    location /storage/ {
-#
-#        root              /Users/mehtel/coding/webserv/
-#        allowed_methods   GET
-#        autoindex         on
-#    }
-#
-#    location /upload/ {
-#        root              /Users/mehtel/coding/webserv/
-#        allowed_methods   POST DELETE
-#    }
-#
-#    location /cgi {
-#        autoindex on
-#        root /Users/mehtel/coding/webserv/cgi
-#        cgi cgi py
-#        #cgi_timeout 5
-#    }
-#}
