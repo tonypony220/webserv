@@ -1,14 +1,15 @@
 #include <sys/poll.h>
-#include "Session.hpp"
-#include "SocketTCP.hpp"
-#include "SmartPtr.hpp"
-//#include "Server.hpp"
-#include "ParseConf.hpp"
 #include <vector>
 #include <list>
 #include <unordered_map>
 #include <sys/socket.h>
 #include <arpa/inet.h>
+
+#include "Session.hpp"
+#include "SocketTCP.hpp"
+#include "SmartPtr.hpp"
+#include "Server.hpp"
+#include "ParseConf.hpp"
 // POLL example
 //https://www.ibm.com/docs/en/i/7.4?topic=designs-using-poll-instead-select
 

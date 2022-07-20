@@ -1,4 +1,4 @@
-SRCS	=	poll.cpp
+SRCS	=	poll.cpp Request.cpp Response.cpp Utils.cpp Server.cpp
 
 # P_DIR	= 	pars/
 
@@ -54,7 +54,7 @@ CFLAGS	=   -std=c++98 -O0 -g -fsanitize=address #-fsanitize=leak #-Wall -Wextra 
 #$(CC) ${OBJS} ${P_OBJS} -Llibft -lft -lreadline -ltermcap -o ${NAME}
 
 all:	
-	g++ ${CFLAGS} poll.cpp && ./a.out #${NAME}
+	g++ ${CFLAGS} ${SRCS} && ./a.out #${NAME}
 
 # clean: $(SUBDIRS)
 # 		${RM} ${OBJS} ${P_OBJS}
