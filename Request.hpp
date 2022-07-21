@@ -21,6 +21,9 @@
 #define CRLF "\r\n"
 #define BYTE char
 
+extern std::string cgi_extensions_supported[3];
+extern std::string HttpMethods[7];
+extern std::string HttpMethodsImplemented[4];
 /*  *** Examples *** :
 Client request:
 
@@ -114,26 +117,12 @@ class HttpParser {
 	void validateHeaders() ;
 	int find_chunk_size( std::vector<BYTE> & input ) ;
 	int parse_chunked( std::vector<BYTE> & input ) ;
-
 	int parseBody(std::vector<BYTE> & input) ;
 	void display(std::ostream & o) ;
 };
 
 
-std::ostream & operator<<( std::ostream & o, HttpParser & s ) {
-//	std::map< std::string, std::string > & headers = s.getHeaders();
-//	o << "HttpParser(" << s.getBuffer();
-//	o << "buffer: " << s.getBuffer();
-//	o << " code: " << s.getCode() << " why: " << s.debug_info << std::endl;
-//	o << "headers: " << std::endl;
-//	std::map< std::string, std::string>::iterator it;
-//	for (it = headers.begin(); it != headers.end(); it++) {
-//		o << it->first << ": " << it->second << std::endl;
-//	}
-	s.display(o);
-//	o << ")" << s.getBuffer();
-	return ( o );
-}
+std::ostream & operator<<( std::ostream & o, HttpParser & s );
 
 class HttpRequest : public HttpParser {
 	public:

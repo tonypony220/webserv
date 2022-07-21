@@ -476,6 +476,10 @@ HttpParser::~HttpParser( void ) {
 	}
 
 
+std::ostream & operator<<( std::ostream & o, HttpParser & s ) {
+	s.display(o);
+	return ( o );
+}
 
 
 HttpRequest::HttpRequest(Server * serv) : HttpParser(serv) {}

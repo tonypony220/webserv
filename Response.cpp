@@ -1,6 +1,10 @@
 #include "Response.hpp"
 #include "Utils.hpp"
 
+//HttpResponse::HttpResponse() : HttpParser() {
+//	verbose && std::cout << "HttpResponse created"  << std::endl;
+//}
+
 HttpResponse::HttpResponse(const HttpParser & copy) : HttpParser(copy) {
 //		verbose && std::cout << "HttpResponse created"  << std::endl;
 		init_response();
@@ -60,9 +64,6 @@ HttpResponse::~HttpResponse( void ) {
 	void HttpResponse::fill_buffer_to_send() {
 		add_status_line();
 		add_headers();
-//		response_buffer = response + response_body;
-//		log("resp_headers: ", response);
-//		log("resp_body: ", response_body);
 		response_buffer.insert(response_buffer.end(),
 							   response.begin(),
 							   response.end()
@@ -116,9 +117,7 @@ HttpResponse::~HttpResponse( void ) {
 //				response_buffer.clear();
 //				return 1;
 //			}
-//			log(BLUE"response error READY "RESET, get_state_type_str());
 			resp_state = STATE_NONE;
-//			log(BLUE"config ptr="RESET, config);
 			if ( config->error_pages_path.size() && error_page_exists()) {
 				type = FILE | HTML | FILE_ERROR;
 				return 0;
@@ -136,11 +135,6 @@ HttpResponse::~HttpResponse( void ) {
 			if ( resp_state < STATE_DONE )
 				return 0;
 			if ( resp_state == STATE_DONE ) {
-//				if ( wait_process() == ERROR ) {
-//					setCode(HttpStatus::InternalServerError, "cgi fail");
-////					response_body.clear();
-//					return 0;
-//				}
 				close(fd);
 				length = response_body.size();
 				fill_buffer_to_send();
@@ -157,22 +151,9 @@ HttpResponse::~HttpResponse( void ) {
 				fill_buffer_to_send();
 				resp_state = STATE_INFC_PROCESSING;
 			}
-
-//			setCode(HttpStatus::OK);
-//			if ( wait_process() == ERROR && resp_state ) {
-//				setCode(HttpStatus::InternalServerError, "cgi fail");
-////					response_body.clear();
-//				return 0;
-//			}
-
-//			log(BLUE"response CGI | UPLOAD "RESET, get_state_type_str());
-//			return 1;
-//			if ( resp_state < STATE_DONE )
-//				return 0;
 			wait_process();
 			if ( resp_state == STATE_DONE && cgi_proc_exited ) {
 				/* resp_state STATE_DONE -> waiting of pipe. */
-//				log("<<<<<<<<<<<<<<<<");
 				resp_state = STATE_READY;
 //				if ( wait_process() == ERROR ) {
 //					setCode(HttpStatus::InternalServerError, "cgi fail");
@@ -228,10 +209,6 @@ HttpResponse::~HttpResponse( void ) {
 	}
 
 	bool  HttpResponse::completed() const {
-//		log("buffer: ", buffer.size());
-//		log("state=", state);
-//		if ( (type & CGI) &&  )
-//		std::cout << "\r\t\t\t\t\t\t\tresp state=" << resp_state;
 		bool r = (resp_state == STATE_READY &&
 				(response_buffer.empty() ||  type & RESPONSE_TIMEOUT_ERROR));
 //		if (r && fd > -1 ) close(fd);
@@ -261,10 +238,9 @@ HttpResponse::~HttpResponse( void ) {
 //	</html>
 
 	int  HttpResponse::autoindex_directory(std::string & path) {
-		//std::vector<std::string> lst;
-		DIR						*dir;
-		struct dirent			*ent;
-		std::string				host(get_host());
+//		DIR						*dir;
+//		struct dirent			*ent;
+//		std::string				host(get_host());
 
 		std::vector<std::string> listing = list_dir(path);
 		response_body += "<html>\n"
@@ -274,31 +250,14 @@ HttpResponse::~HttpResponse( void ) {
 
 		for (size_t i=0; i < listing.size(); i++ ) {
 			response_body += "<a href=\"" + target + "/" +  listing[i] + "\">" + listing[i] +"</a>\n";
-//			response_body += "<a href=\"cgi/" + listing[i] + "\">" + listing[i] +"</a>\n";
-//															response_body +=  host + target + listing[i] + "\n";
 		}
 		response_body += "</pre><hr></body>\n"
 						 "<html>\n";
-
-//		if ((dir = opendir (path.c_str())) != NULL) {
-//		  /* print all the files and directories within directory */
-//		  while ((ent = readdir (dir)) != NULL) {
-//			// TODO add href html links
-//			response_body +=  host + target + std::string(ent->d_name) + "\n";
-//		  }
-//		  closedir (dir);
-//		  return EXIT_SUCCESS;
-//		} else {
-//		  /* could not open directory */
-//		  perror("error list dir");
-//		  return EXIT_FAILURE;
-//		}
 	}
 
 	int  HttpResponse::search_file() {
-		// https://stackoverflow.com/questions/146924/how-can-i-tell-if-a-given-path-is-a-directory-or-a-file-c-c
-//		std::string path(target);
-		// realpath does not work
+	// https://stackoverflow.com/questions/146924/how-can-i-tell-if-a-given-path-is-a-directory-or-a-file-c-c
+	// realpath does not work
 		log("searching in: ", path);
 
 		struct stat s;
@@ -397,9 +356,6 @@ HttpResponse::~HttpResponse( void ) {
 	}
 
 	void  HttpResponse::generate_response_body() {
-//		if (!code)
-//			setCode(HttpStatus::OK);
-//		if ( code / 100 > 3 ) {
 		response_body =
 			"<html>\n"
 			"<head><title>"+get_response_status()+"</title></head>\n"

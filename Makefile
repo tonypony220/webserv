@@ -1,4 +1,4 @@
-SRCS	=	poll.cpp Request.cpp Response.cpp Utils.cpp Server.cpp
+SRCS	=	poll.cpp Request.cpp Response.cpp Utils.cpp Server.cpp SocketTCP.cpp ParseConf.cpp
 
 # P_DIR	= 	pars/
 

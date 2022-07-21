@@ -11,6 +11,21 @@
 #include <set>
 #include <sys/stat.h>
 
+extern std::string cgi_extensions_supported[3];
+extern std::string HttpMethods[7];
+extern std::string HttpMethodsImplemented[4];
+
+void clear_path(std::string & path) ;
+
+//bool vars_correct(std::vector<std::string> & vars, std::string *refs[]) {
+//	std::set<std::string> r(std::begin(refs), std::end(refs));
+//	size_t sz(r.size());
+//	r.insert(vars.begin(), vars.end());
+//	return sz == r.size();
+//}
+bool vars_correct(std::vector<std::string> & vars,
+				  std::string * begin,
+				  std::string * end);
 
 //std::map<std::string, std::string> execs = {std::make_pair(".py", "python3")};
 struct Location {

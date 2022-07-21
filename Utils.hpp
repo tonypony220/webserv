@@ -22,10 +22,6 @@
 #define VERBOSE
 
 
-std::string cgi_extensions_supported[] = {"cgi", "py", "sh"};
-std::string HttpMethods[] = {"GET", "POST", "PUT", "CONNECT",
-							 "DELETE", "OPTIONS", "TRACE"};
-std::string HttpMethodsImplemented[] = {"GET", "POST", "DELETE", "PUT" };
 //bool find_file(std::vector<std::string> & filenames,
 //			   std::string path,
 //			   std::string & result) {
@@ -68,9 +64,6 @@ void p(T a) {
 	std::cout << std::endl;
 }
 
-void handler(int s) {
-	printf("Caught SIGPIPE\n");
-}
 
 
 template <class T> 

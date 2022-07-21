@@ -1,5 +1,13 @@
 #include "Server.hpp"
 
+// WARNING this must not be changed as it now externed with size!!!
+std::string cgi_extensions_supported[] = {"cgi", "py", "sh"};
+std::string HttpMethods[] = {"GET", "POST", "PUT", "CONNECT",
+							 "DELETE", "OPTIONS", "TRACE"};
+std::string HttpMethodsImplemented[] = {"GET", "POST", "DELETE", "PUT" };
+// WARNING this must not be changed as it now externed with size!!!
+
+
 void clear_path(std::string & path) {
 	size_t pos = path.find("//");
 	if (pos != std::string::npos)

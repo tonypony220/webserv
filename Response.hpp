@@ -36,7 +36,7 @@ class CgiPipe;
 class HttpResponse : public HttpParser {
 
   public:
-//	HttpResponse() : HttpParser() { verbose && std::cout << "HttpResponse created"  << std::endl; }
+	HttpResponse();
 	HttpResponse(const HttpParser & copy);
 	HttpResponse( const HttpResponse & copy );
 	~HttpResponse( void ) ;
@@ -52,7 +52,7 @@ class HttpResponse : public HttpParser {
 	std::string			response;
 	std::string			response_body; // * temp var for body
 	std::vector<BYTE>	response_buffer;
-//	std::vector<BYTE>	cgi_resp_buffer;
+//	std::vector<BYTE>	cgi_resp_buffer; // todo
 	std::string			file_type; // * file type for CGI
 	int 				fd;	// * for reading file only
 	int					pid;
@@ -75,15 +75,6 @@ class HttpResponse : public HttpParser {
 	bool been_sent() ;
 	bool completed() const ;
 	std::string get_host() ; // TODO
-//	<html>
-//	<head><title>Index of /yo/</title></head>
-//	<body>
-//	<h1>Index of /yo/</h1><hr><pre><a href="../">../</a>
-//	<a href="Yeah/">Yeah/</a>                                              23-Jun-2022 13:43                   -
-//	<a href="nop/">nop/</a>                                               23-Jun-2022 13:43                   -
-//	<a href="youpi.bad_extension">youpi.bad_extension</a>                                23-Jun-2022 13:42                   0
-//	</pre><hr></body>
-//	</html>
 
 	int autoindex_directory(std::string & path) ;
 	int search_file() ;
