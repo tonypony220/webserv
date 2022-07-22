@@ -9,16 +9,13 @@ set(CMAKE_CXX_STANDARD 98)
 include_directories(.)
 
 add_executable(webserv
-        main.cpp
-        one.hpp
-        poll.cpp
-        iter.hpp
-        select.cpp
-#        session.cpp
-        HttpSession.hpp
-        SocketTCP.c
-        SocketTCP.hpp
-        t.cpp
-        tcp_questn.c)
+		poll.cpp 
+		Request.cpp
+		Response.cpp
+		Utils.cpp
+		Server.cpp
+		SocketTCP.cpp
+		ParseConf.cpp
+        )
 
 set_property(TARGET webserv PROPERTY CXX_STANDARD 98)
