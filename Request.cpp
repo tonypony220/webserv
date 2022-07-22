@@ -4,14 +4,16 @@
 HttpParser::HttpParser( Server * serv )
 		: state(PARSE_START_LINE),
 		  length(0), 
-		  verbose(true),
+		  verbose(false),
 		  code(0), 
 		  counter(0),
-		  session_id(""),
 		  chunk_size_parsed(false),
-		  server_ptr(serv),
-		  config(serv->get_default_config()) {
-}
+		  session_id(""),
+		  config(serv->get_default_config()),
+		  server_ptr(serv)
+		  {
+
+		  }
 
 HttpParser::HttpParser( const HttpParser & copy ) { *this = copy; }
 HttpParser::~HttpParser( void ) {

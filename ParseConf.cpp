@@ -117,10 +117,10 @@ ParserConfig::ParserConfig(const std::string & filename) {
 				set_state(LOCATION);
 			}
 			else if (token == "server_name") {
-				int ret = parse_seq(config.server_names, iss);
+				parse_seq(config.server_names, iss);
 			}
 			else if (token == "listen") {
-				int ret = parse_seq(config.ports, iss);
+				parse_seq(config.ports, iss);
 			}
 			else if (token == "client_max_body_size") {
 				iss >> token;

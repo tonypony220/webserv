@@ -253,6 +253,7 @@ HttpResponse::~HttpResponse( void ) {
 		}
 		response_body += "</pre><hr></body>\n"
 						 "<html>\n";
+		return 0;
 	}
 
 	int  HttpResponse::search_file() {
@@ -468,23 +469,17 @@ HttpResponse::~HttpResponse( void ) {
 	bool  HttpResponse::does_need_interface() {
 		if ( (type & (CGI | UPLOAD)) && resp_state == STATE_NONE ) {
 			resp_state = STATE_WAIT;
-//			log(BLUE"need io? true "RESET, get_state_type_str());
 			return true;
 		}
-//		log(BLUE"need io? false"RESET, get_state_type_str());
 		return false;
 	}
 
-//	int spawn_process(const char *const *args) {
 	int  HttpResponse::spawn_process(std::vector<std::string> string_args) {
 		/* Create copy of current process */
 
 		/* possible to get c_strs only in scope to keep them valid */
-//		set_environ_for_cgi();
 		std::vector<const char *> args;
-//		log(YELLOW"cgi args: "RESET);
-		for (int i=0; i<string_args.size(); i++) {
-//			log("\t*", string_args[i]);
+		for (size_t i=0; i < string_args.size(); i++) {
 			args.push_back(string_args[i].c_str());
 		}
 		args.push_back(0);
@@ -494,8 +489,6 @@ HttpResponse::~HttpResponse( void ) {
 		if (pid == 0) {
 			/* We are now in a child progress
 			Execute different process */
-//			execvpe(args[0], (char* const*)args, (char* const*)pEnv);
-//			execvp(args[0], (char* const*)&args[0]); //(char* const*)
 			execvp(args[0], (char* const*)&args[0]); //(char* const*)
 			/* This code will never be executed */
 			std::cerr << RED"\t\t\t\t\t<<<<<<fork error<<<<<<<" << strerror(errno) << RESET;

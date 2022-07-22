@@ -167,7 +167,7 @@ std::ostream & operator<<( std::ostream & o, Server_config & s ) {
 
 
 	bool Server::configs_intersects(Server_config & new_config) {
-		for (int i=0; i < configs.size(); i++) {
+		for (size_t i=0; i < configs.size(); i++) {
 			Server_config & conf = configs[i];
 			if (intersects(conf.ports, new_config.ports)
 			&& (intersects(conf.server_names, new_config.server_names))) {
@@ -180,14 +180,14 @@ std::ostream & operator<<( std::ostream & o, Server_config & s ) {
 	}
 
 	void Server::display_configs_addresses() { // debuging purpose
-		for (int i = 0; i < configs.size(); i++) {
+		for (size_t i = 0; i < configs.size(); i++) {
 			std::cout << "config* = " << &configs[i] << "\n";
 			std::cout << configs[i];
 		}
 
 		std::map<int, std::vector<Server_config*> >::iterator it = mapping.begin();
 		for (; it != mapping.end(); it++) {
-			for (int i = 0; i < it->second.size(); i++)
+			for (size_t i = 0; i < it->second.size(); i++)
 				std::cout << "port config = " << it->second[i] << "\n";
 		}
 	}
@@ -226,7 +226,7 @@ std::ostream & operator<<( std::ostream & o, Server_config & s ) {
 		&& !valid_dir_path(config.error_pages_path))
 			err << "bad err pages path: " << config.root << " "
 			<< strerror(errno);
-		for (int i = 0; i < config.locs.size() && ok(); i++) {
+		for (size_t i = 0; i < config.locs.size() && ok(); i++) {
 			config.locs[i].validate(err);
 		}
 	}
@@ -251,7 +251,7 @@ std::ostream & operator<<( std::ostream & o, Server_config & s ) {
 		Server_config * conf = &configs.back();
 //		std::cout << "<<<<<<<< parser config" << &config << "\n";
 //		std::cout << "<<<<<<<< serv   config" << conf << "\n";
-		for ( int i=0; i<config.ports.size(); i++ ) {
+		for ( size_t i = 0; i<config.ports.size(); i++ ) {
 			int port = config.ports[i];
 			if ( ports.insert(port).second )
 //			if ( ports.find(port) == ports.end() )

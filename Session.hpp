@@ -29,7 +29,10 @@ public:
 	}
 	int 		 	getFd( void ) const { return fd; }
 	Server * 		getServ( void ) const { return server_ptr; }
-	virtual int		processEvent( short event ) { return SUCCESS ;};
+	virtual int		processEvent( short event ) {
+		event++;
+		return SUCCESS ;
+	}
 	virtual IOInterface * get_interface() { return NULL; }
 
 	Server *				  server_ptr;
@@ -125,10 +128,8 @@ public:
 	}
 
 	virtual int		processEvent( short event ) {
-		int ret;
-
+		event++; // unused var :)
 		std::vector<BYTE> & buff = response_ptr->get_request_buffer();
-//		int 		rc = ::write(fd, buff.c_str(), buff.size());
 		int 		rc = ::write(fd, &buff[0], buff.size());
 		log("write to file ", fd, BLUE"bytes="RESET, rc); //fd &&
 		if (rc < 0) {
@@ -141,7 +142,6 @@ public:
 		}
 
 		buff.erase(buff.begin(), buff.begin() + rc);
-//		buff.erase(0, rc);
 		return SUCCESS;
 	}
 };
@@ -163,14 +163,17 @@ public:
 	std::string 			  ip;
 
 	tcpSession(int fd, Server * serv)
-		: IOInterface(fd, serv),
-		current_response(0),
-		current_request(0) {
-		add_request();
-		read_eof = false;
-		start = std::time(nullptr);
-		log(PURPLE"tcpSession created, fd: ", fd, RESET); //fd &&
-	}
+		:
+		IOInterface(fd, serv),
+		current_request(0),
+		current_response(0)
+		{
+			add_request();
+			read_eof = false;
+			start = std::time(nullptr);
+			log(PURPLE"tcpSession created, fd: ", fd, RESET); //fd &&
+		}
+
 	~tcpSession() { 
 		log(PURPLE"tcpSession destructed, fd: ", fd, RESET);
 	}

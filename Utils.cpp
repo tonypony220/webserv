@@ -43,7 +43,7 @@ bool find_file(std::vector<std::string> & filenames,
 //	std::cout << "\tsearching in dir: " << path << "\n";
 	std::vector<std::string> listing = list_dir(path);
 	std::vector<std::string> dirs;
-	for ( int i=0; i < listing.size(); i++ )
+	for ( size_t i=0; i < listing.size(); i++ )
 	{
 		std::string new_path = path + "/" + listing[i];
 		if ( easyfind(filenames, listing[i]) ) {
@@ -55,7 +55,7 @@ bool find_file(std::vector<std::string> & filenames,
 		}
 
 	}
-	for ( int i=0; i < dirs.size(); i++ ) {
+	for ( size_t i=0; i < dirs.size(); i++ ) {
 		if ( find_file(filenames, dirs[i], result) )
 			return true;
 	}
@@ -63,7 +63,7 @@ bool find_file(std::vector<std::string> & filenames,
 }
 
 bool validate_hex( std::string & number ) {
-	for ( int i = 0; i < number.size(); i++ ) {
+	for ( size_t i = 0; i < number.size(); i++ ) {
 		if ( !isdigit(number[i])
 			 && ( std::toupper(number[i]) > 70 || std::toupper(number[i]) < 65 ) )
 			return false;
@@ -122,11 +122,8 @@ void trim(std::string & s) {
 	rtrim(s);
 }
 
-void to_lower(std::string & str)
-{
-//	int len = ;
-//	for (int i=0; i < static_cast<int>(str.length()); ++i) {
-	for (int i=0; i < str.length(); ++i) {
+void to_lower(std::string & str) {
+	for (size_t i=0; i < str.length(); ++i) {
 		str[i] = std::tolower(str[i]);
 	}
 }

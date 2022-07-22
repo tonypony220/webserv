@@ -51,9 +51,12 @@ class HttpParser {
   protected:
 	std::string   	buffer;
 	std::vector<BYTE> request_buffer;
-//	std::string   	bufExt;
 	unsigned int	state; // it was char but outputed nonprintable chars
+	unsigned long 	length; // content lenght
+	bool 		  	verbose; // debug printing
 	unsigned int 	code;
+	unsigned long 	counter;
+	bool			chunk_size_parsed;
 // maybe better to store not splited headers
 	std::map< std::string, std::string > headers;
 	std::map< std::string, std::string > cookies;
@@ -66,10 +69,7 @@ class HttpParser {
 	std::string 	version;
 	std::string 	protocol;
 	std::string 	transfer_encoding;
-	unsigned long 	length; // content lenght
-	unsigned long 	counter;
 	size_t 			chunk_size; // current chunk size
-	bool			chunk_size_parsed;
 	Server_config	*config;
 	Location		*location;
 
@@ -77,7 +77,6 @@ class HttpParser {
 	typedef std::map< std::string, std::string >::iterator headerItor;
 	typedef std::pair <std::string, std::string> headersPair;
 
-	bool 		  verbose;
 //	    int	 		  fd;
   public:
 	std::string	  start_line; // for logger
