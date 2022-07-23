@@ -3,7 +3,7 @@
 #siege -b -i -c 25 -r 1 http://localhost:2001/big_ascii_file.cc
 
 
-a=$(lsof -c a.out | wc -l | tr -d ' ') # nums opened fds 
+a=$(lsof -c webserv | wc -l | tr -d ' ') # nums opened fds 
 # if [ a -eq '0' ]; then 
 # 	echo "no $serv process"
 # 	exit
@@ -31,7 +31,7 @@ code_ok() {
 
 check_fds() {
 	sleep 1
-	cur=$(lsof -c a.out | wc -l | tr -d ' ')
+	cur=$(lsof -c webserv wc -l | tr -d ' ')
 	if [ $cur = $a ]; then
 	   echo -e $GREEN "fd's clear" $RESET
 	else
