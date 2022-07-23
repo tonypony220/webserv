@@ -4,19 +4,19 @@ simple HTTP webserver
 - able to handle files
 - support CGI scripts written in python, bash or binary
 
-##Warning! 
+## Warning! 
 Do not use it in production due to security not completed.
 
 Behavior of POST method is similar to PUT as it allows to upload files without mime-type headers.
 
-##Run server:
+### Run server:
 from root of project. 
 ``` shell
 make
 ./webserv conf
 ```
 
-##Config params: 
+## Config params: 
 
 `server name` - name of host as in nginx
 
@@ -39,8 +39,8 @@ make
 
 `cgi` - enables cgi scripts with provided extension. 
 
-##Sample config 
-###Values in square brakets are optional.
+## Sample config 
+### Values in square brakets are optional.
 ```
 server {
     server_name serv.org [www.serv.org]
