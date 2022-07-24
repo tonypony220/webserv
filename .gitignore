@@ -11,3 +11,7 @@ somefile
 webserv*
 yo
 *.o
+.DS_STORE/
+.idea/
+cmake-build-debug
+objs

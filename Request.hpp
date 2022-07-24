@@ -112,7 +112,7 @@ class HttpParser {
 	int validateMethodImplemented() ;
 	int parseHeaderLine() ;
 	void match_config_and_location() ;
-	int parseCookies(std::string & buffer) ;
+	int parseCookies(std::string & buf) ;
 	void validateHeaders() ;
 	int find_chunk_size( std::vector<BYTE> & input ) ;
 	int parse_chunked( std::vector<BYTE> & input ) ;
