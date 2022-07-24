@@ -2,7 +2,7 @@
 m.cpp
 tags
 file.cpp
-cmake-build-debug
+cmake-build-debug/
 file*
 ide*
 bigfile
@@ -10,3 +10,6 @@ sfile
 somefile
 webserv*
 yo
+
+.DS_STORE/
+.idea/

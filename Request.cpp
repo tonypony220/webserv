@@ -269,9 +269,9 @@ HttpParser::~HttpParser( void ) {
 	// af
 	// af ; v = 4
 	// ==== ;
-	int HttpParser::parseCookies(std::string & buffer) {
-		std::string::size_type colon = buffer.find(";");
-		std::string::size_type eq = buffer.find("=");
+	int HttpParser::parseCookies(std::string & buf) {
+		std::string::size_type colon = buf.find(";");
+		std::string::size_type eq = buf.find("=");
 		size_t 				   start = 0;
 
 		if (eq == std::string::npos)
@@ -279,13 +279,13 @@ HttpParser::~HttpParser( void ) {
 		while (eq != std::string::npos) {
 			if (colon != std::string::npos && eq > colon)
 				return ERROR;
-			size_t end = buffer.size();
+			size_t end = buf.size();
 			if (colon != std::string::npos)
 				end = colon;
 			if ( eq-start==0 || end-eq==0 )
 				return ERROR;
-			std::string key = buffer.substr(start, eq-start);
-			std::string val = buffer.substr(eq + 1,  end-eq);
+			std::string key = buf.substr(start, eq-start);
+			std::string val = buf.substr(eq + 1,  end-eq);
 			if (key == "id") {
 				session_id = val;
 				log("session id= ", val);
@@ -293,8 +293,8 @@ HttpParser::~HttpParser( void ) {
 			if (!cookies.insert(headersPair(key, val)).second)
 				return ERROR; // duplicate
 			start = end;
-			colon = buffer.find(";", start);
-			eq = buffer.find("=", start);
+			colon = buf.find(";", start);
+			eq = buf.find("=", start);
 		}
 		return SUCCESS;
 	}
