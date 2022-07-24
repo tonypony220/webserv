@@ -67,8 +67,11 @@ ParserConfig::ParserConfig(const std::string & filename) {
 //			}
 			else if ( token == "allowed_methods")
 				parse_seq(loc.allowed_methods, iss);
-			else if (token == "root")
+			else if (token == "root") {
 				iss >> loc.root;
+				if (loc.root.back() != '/')
+					loc.root += "/";
+			}
 			else if (token == "redirect")
 				iss >> loc.redirect_uri;
 			else if (token == "index")
@@ -126,8 +129,11 @@ ParserConfig::ParserConfig(const std::string & filename) {
 				iss >> token;
 				config.max_size = atoi(token.c_str());
 			}
-			else if (token == "root")
+			else if (token == "root") {
 				iss >> config.root;
+				if (config.root.back() != '/')
+					config.root += "/";
+			}
 			else if (token == "enable_session")
 				config.enable_session = true;
 			else if (token == "error_page")

@@ -370,6 +370,7 @@ HttpResponse::~HttpResponse( void ) {
 //		}
 	}
 	int  HttpResponse::create_file() {
+		log(YELLOW"creating file path: ", path,RESET);
 		fd = open(path.c_str(), O_WRONLY | O_NONBLOCK | O_CREAT | O_TRUNC ,  0400);
 		if ( fd < 0 ) {
 			log(RED"creating file open error: ", strerror(errno),RESET);

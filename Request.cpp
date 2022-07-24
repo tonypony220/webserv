@@ -242,7 +242,12 @@ HttpParser::~HttpParser( void ) {
 		location = config->route_target_path(path);
 		clear_path(path);
 //		path.erase(0, 1);
-		if ( host.empty() ) return;
+		if (location == nullptr) {
+			setCode(HttpStatus::NotFound, "not route match");
+			return;
+		}
+		if ( host.empty() )
+			return;
 		if (!location->method_allowed(method))
 			setCode(HttpStatus::MethodNotAllowed, "not allowed");
 		if (location->redirect_uri.size())

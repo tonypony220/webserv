@@ -10,21 +10,25 @@ Do not use it in production due to security not completed.
 Behavior of POST method is similar to PUT as it allows to upload files without mime-type headers.
 
 ### Run server:
-from root of project. 
+From root of project run:  
 ``` shell
 make
 ./webserv conf
 ```
-
+conf is path to config file
 ## Config params: 
 
-`server name` - name of host as in nginx
+if param is occured more then one time, than will be used lower one.
+
+it's possible to define locations with same routes, it's not defined which one would be used.
+
+`server name` - name of host as in nginx. default is first occured.
 
 `listen` - listening ports
 
 `client_max_body_size` - size in bytes
 
-`root` - directory to search in for route of server or location
+`root` - directory to search in for route of server or location. Root in location has more priority.
 
 `location` - match of URI part after server_name and port 
 

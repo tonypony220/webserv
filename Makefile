@@ -32,8 +32,15 @@ $(NAME) : $(SRCS) $(OBJS_DIR) $(OBJS) Makefile
 	$(CC) $(CFLAGS) -o $(NAME) $(OBJS)
 
 all : $(NAME)
+	echo "do make set to preset folders for tests"
 
 bonus : $(NAME)
+
+set :
+	./setup.sh
+
+del :
+	rm -rf /tmp/files
 
 clean :
 	rm -rf $(OBJS) $(DEPENDENCIES)

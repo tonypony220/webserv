@@ -43,26 +43,26 @@ check_fds() {
 echo "expected code 200"
 siege -c 5 -r 1 http://localhost:2001/
 exit_ok
-check_fds
+# check_fds
 
 echo "expected code 404"
 siege -c 25 -r 1 http://localhost:2001/a
 exit_ok
-check_fds
+# check_fds
 
 echo "expected code 200"
-siege -c 25 -r 1 http://localhost:2001/tmp/screenshot.png
+siege -c 25 -r 1 http://localhost:2001/images/screenshot.png
 exit_ok
-check_fds
+# check_fds
 
 echo -e "\t\t*** chunked upload check *** "
-code=$(curl -s -o /dev/null -w "%{http_code}" -H "Transfer-Encoding: chunked" -d @t.cpp localhost:2001)
+code=$(curl -s -o /dev/null -w "%{http_code}" -H "Transfer-Encoding: chunked" -d @tmp/file localhost:2001)
 code_ok "405"
 exit_ok
-check_fds
+# check_fds
 
 
-code=$(curl -s -o /dev/null -w "%{http_code}" -T t.cpp localhost:2001/upload/)
+code=$(curl -s -o /dev/null -w "%{http_code}" -T tmp/file localhost:2001/upload/)
 code_ok "204"
 exit_ok
 
@@ -70,30 +70,30 @@ code=$(curl -s -o /dev/null -w "%{http_code}" -T tmp/screenshot.png localhost:20
 code_ok "413"
 exit_ok
 
-code=$(curl -s -o /dev/null -w "%{http_code}" -X DELETE localhost:2001/upload/t.cpp)
+code=$(curl -s -o /dev/null -w "%{http_code}" -X DELETE localhost:2001/upload/file)
 code_ok "204"
 exit_ok
 
-code=$(curl -s -o /dev/null -w "%{http_code}" -X DELETE localhost:2001/upload/t.cpp)
+code=$(curl -s -o /dev/null -w "%{http_code}" -X DELETE localhost:2001/upload/file)
 code_ok "404"
 exit_ok
 
-code=$(curl -s -o /dev/null -w "%{http_code}" -d @t.cpp localhost:2001/upload/sfile)
+code=$(curl -s -o /dev/null -w "%{http_code}" -d @tmp/file localhost:2001/upload/postfile)
 code_ok "204"
 exit_ok
 
-code=$(curl -s -o /dev/null -w "%{http_code}" -H "Transfer-Encoding: chunked" -d @t.cpp localhost:2001/upload/somefile)
+code=$(curl -s -o /dev/null -w "%{http_code}" -H "Transfer-Encoding: chunked" -d @tmp/somefile localhost:2001/upload/somefile)
 code_ok "204"
 exit_ok
 
-code=$(curl -s -o /dev/null -w "%{http_code}"  -H "Transfer-Encoding: chunked" -T t.cpp localhost:2001/upload/)
+code=$(curl -s -o /dev/null -w "%{http_code}"  -H "Transfer-Encoding: chunked" -T tmp/file localhost:2001/upload/)
 code_ok "204"
 exit_ok
-check_fds
+# check_fds
 
- echo "expected code 200"
- siege -c 25 -r 1 http://localhost:2001/cgi/hello_get.py
- exit_ok
+echo "expected code 200"
+siege -c 25 -r 1 http://localhost:2001/cgi/hello_get.py
+exit_ok
 
 echo "\t\t**** checking routing by host name ****\n\n"
 code=$(curl -s -o /dev/null -w "%{http_code}" -T big_ascii_file.cc  localhost:2001/upload/)
@@ -101,10 +101,11 @@ code_ok "204"
 exit_ok
 
 echo "\t\t**** checking routing by host name ****\n\n"
-code=$(curl -s -o /dev/null -w "%{http_code}" -T big_ascii_file.cc  hello.org:2001/upload/)
+code=$(curl -s -o /dev/null -w "%{http_code}" -T big_ascii_file.cc  127.0.0.1:2001/upload/)
 code_ok "413"
 exit_ok
 
+sleep 1
 check_fds
 echo "\n\n ------- put in browser: ---------"
 echo "localhost:2001/form.html"
